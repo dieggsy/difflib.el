@@ -1,6 +1,6 @@
 (require 'cl-lib)
 
-(defmacro difflib-alist-get (key alist &optional default)
+(defmacro difflib--alist-get (key alist &optional default)
   `(alist-get ,key ,alist ,default nil #'equal))
 
 (defun difflib--calculate-ratio (matches length)
@@ -98,7 +98,7 @@ files). That may be because this is the only method of the 3 that has a
     (cl-loop
      for elt in (split-string b "" 'omit-nulls)
      as i = 0 then (1+ i)
-     do (cl-symbol-macrolet ((exists (difflib-alist-get elt b2j)))
+     do (cl-symbol-macrolet ((exists (difflib--alist-get elt b2j)))
           (when (not exists)
             (setf exists nil))
           (setf exists (append exists (list i)))))
@@ -136,12 +136,12 @@ files). That may be because this is the only method of the 3 that has a
        as newj2len = nil
        do (cl-loop
            named inner
-           for j in (difflib-alist-get (char-to-string (elt a i)) b2j nothing)
+           for j in (difflib--alist-get (char-to-string (elt a i)) b2j nothing)
            do (cond ((< j blo) nil)
                     ((>= j bhi)
                      (cl-return-from inner))
-                    (t (let ((k (1+ (difflib-alist-get (1- j) j2len 0))))
-                         (setf (difflib-alist-get j newj2len) k)
+                    (t (let ((k (1+ (difflib--alist-get (1- j) j2len 0))))
+                         (setf (difflib--alist-get j newj2len) k)
                          (if (> k bestsize)
                              (setq besti (1+ (- i k))
                                    bestj (1+ (- j k))
