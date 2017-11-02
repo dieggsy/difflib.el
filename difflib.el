@@ -3,6 +3,11 @@
 (defmacro difflib-alist-get (key alist &optional default)
   `(alist-get ,key ,alist ,default nil #'equal))
 
+(defun difflib--calculate-ratio (matches length)
+  (if length
+      (* 2.0 (/ (float matches) length))
+    1.0))
+
 (defclass difflib-sequence-matcher ()
   ((isjunk :initarg :isjunk
            :initform nil
@@ -214,3 +219,37 @@ files). That may be because this is the only method of the 3 that has a
         (push (list la lb 0) non-adjacent)
         ;; (setq non-adjacent (reverse non-adjacent))
         (oset matcher :matching-blocks (reverse non-adjacent))))))
+(cl-defmethod difflib-ratio ((matcher difflib-sequence-matcher))
+  (let ((matches (apply '+ (mapcar (lambda (lst) (car (last lst)))
+                                   (difflib-get-matching-blocks matcher)))))
+    (difflib--calculate-ratio matches
+                              (+
+                               (length (oref matcher :a))
+                               (length (oref matcher :b))))))
+
+(cl-defmethod difflib-quick-ratio ((matcher difflib-sequence-matcher))
+  (cl-symbol-macrolet ((fullbcount (oref matcher :fullbcount))
+                       (b (oref matcher :b))
+                       (a (oref matcher :a)))
+    (when (not fullbcount)
+      (cl-loop for elt in (split-string b "" 'omit-nulls)
+               do (setf (difflib-alist-get elt fullbcount)
+                        (1+ (difflib-alist-get elt fullbcount 0)))))
+    (let (avail
+          numb
+          (matches 0))
+      (cl-loop for elt in (split-string a "" 'omit-nulls)
+               do (let ((availhas (difflib-alist-get elt avail)))
+                    (if availhas
+                        (setq numb availhas)
+                      (setq numb (difflib-alist-get elt fullbcount 0)))
+                    (setf (difflib-alist-get elt avail) (1- numb))
+                    (when (> numb 0)
+                      (setq matches (1+ matches)))))
+      (difflib--calculate-ratio matches (+ (length a)
+                                           (length b))))))
+
+(cl-defmethod difflib-real-quick-ratio ((matcher difflib-sequence-matcher))
+  (let ((la (length (oref matcher :a)))
+        (lb (length (oref matcher :b))))
+    (difflib--calculate-ratio (min la lb) (+ la lb))))
