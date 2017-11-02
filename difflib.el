@@ -171,3 +171,46 @@ files). That may be because this is the only method of the 3 that has a
                      (elt b (+ bestj bestsize))))
         (setq bestsize (1+ bestsize)))
       (list besti bestj bestsize))))
+
+(cl-defmethod difflib-get-matching-blocks ((matcher difflib-sequence-matcher))
+  (if (oref matcher :matching-blocks)
+      (oref matcher :matching-blocks)
+    (let* ((la (length (oref matcher :a)))
+           (lb (length (oref matcher :b)))
+           (queue `((0 ,la 0 ,lb)))
+           matching-blocks)
+      (while queue
+        (cl-destructuring-bind (alo ahi blo bhi) (pop queue)
+          (let ((x (difflib-find-longest-match matcher alo ahi blo bhi)))
+            (cl-destructuring-bind (i j k) x
+              (when k
+                (push x matching-blocks)
+                (when (and (< alo i) (< blo j))
+                  (push (list alo i blo j) queue))
+                (when (and (< (+ i k) ahi) (< (+ j k) bhi))
+                  (push (list (+ i k) ahi (+ j k) bhi) queue)))))))
+      (setq matching-blocks
+            (sort matching-blocks ;; TODO: SORT BY WAT
+                  (lambda (lst1 lst2)
+                    (string< (format "%s" lst1)
+                             (format "%s" lst2)))))
+      (let ((i1 0)
+            (j1 0)
+            (k1 0)
+            non-adjacent)
+        (cl-loop for (i2 j2 k2) in matching-blocks
+                 if (and (= (+ i1 k1) i2)
+                         (= (+ i1 k1) j2))
+                 do (setq k1 (+ k1 k2))
+                 else
+                 do (progn
+                      (when k1
+                        (push (list i1 j1 k1) non-adjacent))
+                      (setq i1 i2
+                            j1 j2
+                            k1 k2)))
+        (when k1
+          (push (list i1 j1 k1) non-adjacent))
+        (push (list la lb 0) non-adjacent)
+        ;; (setq non-adjacent (reverse non-adjacent))
+        (oset matcher :matching-blocks (reverse non-adjacent))))))
