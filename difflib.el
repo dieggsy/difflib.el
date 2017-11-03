@@ -1,12 +1,45 @@
+;;; difflib.el --- Helpers for computing deltas between objects. -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2017 Diego A. Mundo
+;; Author: Diego A. Mundo <diegoamundo@gmail.com>
+;; URL: http://github.com/dieggsy/difflib.el
+;; Git-Repository: git://github.com/dieggsy/difflib.el
+;; Created: 2017-10-28
+;; Version: 0.1.0
+;; Keywords: matching tools string
+;; Package-Requires: ((emacs "24.4"))
+
+;; This file is not part of GNU Emacs.
+
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; Provides an emacs-lisp port of python's difflib.
+
+;;; Code:
 (require 'cl-lib)
 (require 'eieio)
 
 (defvar difflib-pythonic-strings nil)
 
 (defmacro difflib--alist-get (key alist &optional default)
+  "Equivalent to `(alist-get KEY ALIST DEFAULT nil #'equal)'."
   `(alist-get ,key ,alist ,default nil #'equal))
 
 (defun difflib--calculate-ratio (matches length)
+  "When (> LENGTH 0), return (* 2.0 (/ (float MATCHES) LENGTH))."
   (if (> length 0)
       (* 2.0 (/ (float matches) length))
     1.0))
@@ -65,22 +98,41 @@ edit sequences, but does tend to yield matches that \"look right\" to people.
 SequenceMatcher tries to compute a \"human-friendly diff\" between two
 sequences. Unlike e.g. UNIX(tm) diff, the fundamental notion is the longest
 *contiguous* & junk-free matching subsequence. That's what catches peoples'
-eyes. The Windows(tm) windiff has another interesting notion, pairing
-up elements that appear uniquely in each sequence. That, and the method here,
+eyes. The Windows(tm) windiff has another interesting notion, pairing up
+elements that appear uniquely in each sequence. That, and the method here,
 appear to yield more intuitive difference reports than does diff. This method
 appears to be the least vulnerable to synching up on blocks of \"junk lines\",
 though (like blank lines in ordinary text files, or maybe \"<P>\" lines in HTML
 files). That may be because this is the only method of the 3 that has a
-*concept* of \"junk\" <wink>.")
+*concept* of \"junk\" <wink>.
+
+See the Differ class for a fancy human-friendly file differencer, which uses
+SequenceMatcher both to compare sequences of lines, and to compare sequences of
+characters within similar (near-matching) lines.
+
+See also function get_close_matches() in this module, which shows how simple
+code building on SequenceMatcher can be used to do useful work.")
 
 (cl-defmethod initialize-instance :after ((matcher difflib-sequence-matcher) &rest _args)
+  "Construct a difflib-sequence-matcher."
   (difflib-set-seqs matcher (oref matcher :a) (oref matcher :b)))
 
 (cl-defmethod difflib-set-seqs ((seq difflib-sequence-matcher) a b)
+  "Set the two sequences to be compared to A and B."
   (difflib-set-seq1 seq a)
   (difflib-set-seq2 seq b))
 
 (cl-defmethod difflib-set-seq1 ((matcher difflib-sequence-matcher) seq)
+  "Set the first sequence to be compared to SEQ.
+
+The second sequence to be compared is not changed.
+
+difflib-sequence-matcher computes and caches detailed information about the
+second sequence, so if you want to compare one sequence S against many
+sequences, use .set_seq2(S) once and call .set_seq1(x) repeatedly for each of
+the other sequences.
+
+See also `difflib-set-seqs' and `difflib-set-seq2'."
   (oset matcher :a (if (and difflib-pythonic-strings (stringp seq))
                        (split-string seq "" 'omit-nulls)
                      seq))
@@ -88,6 +140,17 @@ files). That may be because this is the only method of the 3 that has a
   (oset matcher opcodes nil))
 
 (cl-defmethod difflib-set-seq2 ((matcher difflib-sequence-matcher) seq)
+  "Set the second sequence to be compared to SEQ.
+
+The first sequence to be compared is not changed.
+
+difflib-sequence-matcher computes and caches detailed information about the
+second sequence, so if you want to compare one sequence S against many
+sequences, use .set_seq2(S) once and call .set_seq1(x) repeatedly for each of
+the other sequences.
+
+See also `difflib-set-seqs' and `difflib-set-seq1'.
+"
   (oset matcher :b (if (and difflib-pythonic-strings (stringp seq))
                        (split-string seq "" 'omit-nulls)
                      seq))
@@ -129,6 +192,27 @@ files). That may be because this is the only method of the 3 that has a
                    do (oset matcher b2j (delq (assoc elt b2j) b2j))))))))
 
 (cl-defmethod difflib-find-longest-match ((matcher difflib-sequence-matcher) alo ahi blo bhi)
+  "Find longest matching block in (cl-subseq a ALO AHI) and (cl-subseq b BLO BHI).
+
+If slot :isjunk is not defined:
+
+Return (i j k) surch that (cl-subseq a i (+ i k)) is equal to (cl-subseq b j (+ j k)), where
+    (<= alo i (+ i k) ahi)
+    (<= blo j (+ j k) bhi)
+and for all (i' j' k') meeting those conditions,
+    (>= k k')
+    (<= i i')
+    and (when (= i i') (<= j j'))
+
+In other words, of all maximal matching blocks, return one that starts earliest
+in a, and of all those maximal matching blocks that start earliest in a,return
+the one that starts earliest in b.
+
+If isjunk is defined, first the longest matching block is determined as above,
+but with the additional restriction that no junk element appears in the block.
+Then that block is extended as far as possible by matching (only) junk elements
+on both sides. So the resulting block never matches on junk except as identical
+junk happens to be adjacent to an \"interesting\" match."
   (cl-symbol-macrolet ((a (oref matcher :a))
                        (b (oref matcher :b))
                        (b2j (oref matcher :b2j))
@@ -185,6 +269,17 @@ files). That may be because this is the only method of the 3 that has a
       (list besti bestj bestsize))))
 
 (cl-defmethod difflib-get-matching-blocks ((matcher difflib-sequence-matcher))
+  "Return list of triples describing matching subsequences.
+
+Each triple is of the form (i j n), and means that
+(equal (cl-subseq a i (+ i n)) (cl-subseq b j (+ j n))). The triples are
+monotonically increasing in i and in j. It's also guaranteed that if (i j n)
+and (i' j' n') are adjacent triples in the list, and the second is not the last
+triple in the list, then (/= (+ i n) i') or (/= (+ j n) j'). IOW, adjacent
+triples never describe adjacent equal blocks.
+
+The last triple is a dummy, (list (length a) (length b) 0), and is the only
+triple with (= n 0)."
   (if (oref matcher :matching-blocks)
       (oref matcher :matching-blocks)
     (let* ((la (length (oref matcher :a)))
@@ -231,6 +326,20 @@ files). That may be because this is the only method of the 3 that has a
         (oset matcher :matching-blocks (reverse non-adjacent))))))
 
 (cl-defmethod difflib-get-opcodes ((matcher difflib-sequence-matcher))
+  "Return list of 5-tuples describing how to turn a into b.
+
+Each tuple is of the form (tag i1 i2 j1 j2). The first tuple has (= i1 j1 0),
+and remaining tuples have i1 equal to the i2 from the tuple preceding it, and
+likewise for j1 equal to the previous j2.
+
+The tags are strings, with these meanings:
+
+'replace':  (cl-subseq a i1 i2) should be replaced by (cl-subseq b j1 j2)
+ 'delete':  (cl-subseq a i1 i2) should be deleted.
+            Note that (= j1 j2) in this case.
+ 'insert':  (cl-subseq b j1 j3) should be inserted at (cl-subseq a i1 i1).
+            Note that (= i1 i2) in this case.
+ 'equal':   (equal (cl-subseq a i1 i3) (cl-subseq b j1 j2))."
   (if (oref matcher :opcodes)
       (oref matcher :opcodes)
     (cl-symbol-macrolet ((answer (oref matcher :opcodes)))
@@ -255,6 +364,10 @@ files). That may be because this is the only method of the 3 that has a
       (setf answer (reverse answer)))))
 
 (cl-defmethod difflib-get-grouped-opcodes ((matcher difflib-sequence-matcher) &key (n 3))
+  "Isolate change clusters by eliminating ranges with no changes.
+
+Return a generator of groups with up to n lines of context.
+Each group is in the same format as returned by `difflib-get-opcodes'."
   (cl-block grouped-opcodes
     (let ((codes (difflib-get-opcodes matcher))
           tag
@@ -304,6 +417,17 @@ files). That may be because this is the only method of the 3 that has a
         (reverse groups)))))
 
 (cl-defmethod difflib-ratio ((matcher difflib-sequence-matcher))
+  "Return a measure of the sequences' similarity.
+
+This is (/ (* M 2) (float T)) where T is the total number of elements in both
+sequences and M is the number of matches.
+Note that this is 1 if the sequences are identical, and 0 if they have nothing
+in common.
+
+difflib-ratio is expensive to compute if you haven't already computed
+`difflib-get-matching-blocks' or `difflib-get-opcodes',in which case you may
+want to try `difflib-quick-ratio' or `difflib-real-quick-ratio' first to get an
+upper bound."
   (let ((matches (apply '+ (mapcar (lambda (lst) (car (last lst)))
                                    (difflib-get-matching-blocks matcher)))))
     (difflib--calculate-ratio matches
@@ -312,6 +436,10 @@ files). That may be because this is the only method of the 3 that has a
                                (length (oref matcher :b))))))
 
 (cl-defmethod difflib-quick-ratio ((matcher difflib-sequence-matcher))
+  "Return an upper bound on `difflib-ratio' relatively quickly.
+
+This isn't defined beyond that it is an upper bound on `difflib-ratio', and is
+faster to compute."
   (cl-symbol-macrolet ((fullbcount (oref matcher :fullbcount))
                        (b (oref matcher :b))
                        (a (oref matcher :a)))
@@ -334,11 +462,31 @@ files). That may be because this is the only method of the 3 that has a
                                            (length b))))))
 
 (cl-defmethod difflib-real-quick-ratio ((matcher difflib-sequence-matcher))
+  "Return an upper bound on `difflib-ratio' very quickly.
+
+This isn't defined beyond that it is an upper bound on .ratio(), and is faster
+to compute than either `difflib-ratio' or `difflib-quick-ratio'."
+
   (let ((la (length (oref matcher :a)))
         (lb (length (oref matcher :b))))
     (difflib--calculate-ratio (min la lb) (+ la lb))))
 
 (cl-defun difflib-get-close-matches (word possibilities &key (n 3) (cutoff 0.6))
+  "Use SequenceMatcher to return list of the best \"good enough\" matches.
+
+WORD is a sequence for which close matches are desired (typically a string).
+
+POSSIBILITIES is a list of sequences against which to match word
+(typically a list of strings).
+
+Optional arg N (default 3) is the maximum number of close matches to return. N
+must be > 0.
+
+Optional arg CUTOFF (default 0.6) is a float in [0, 1]. Possibilities that
+don't score at least that similar to word are ignored.
+
+The best (no more than N) matches among the POSSIBILITES are returned in a
+list, sorted by similarity score, most similar first."
   (when (not (> n 0))
     (error "N must be > 0: %S" n))
   (when (not (<= 0.0 cutoff 1.0))
@@ -362,3 +510,5 @@ files). That may be because this is the only method of the 3 that has a
     (mapcar (lambda (lst) (car lst)) result)))
 
 (provide 'difflib)
+
+;;; difflib.el ends here
