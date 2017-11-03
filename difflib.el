@@ -6,7 +6,7 @@
   `(alist-get ,key ,alist ,default nil #'equal))
 
 (defun difflib--calculate-ratio (matches length)
-  (if (/= length 0)
+  (if (> length 0)
       (* 2.0 (/ (float matches) length))
     1.0))
 
