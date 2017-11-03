@@ -253,3 +253,26 @@ files). That may be because this is the only method of the 3 that has a
   (let ((la (length (oref matcher :a)))
         (lb (length (oref matcher :b))))
     (difflib--calculate-ratio (min la lb) (+ la lb))))
+
+(cl-defun difflib-get-close-matches (word possibilities &key (n 3) (cutoff 0.6))
+  (when (not (> n 0))
+    (error "N must be > 0: %S" n))
+  (when (not (<= 0.0 cutoff 1.0))
+    (error "CUTOFF must be in [0.0, 1.0]: %S" cutoff))
+  (let (result
+        (s (difflib-sequence-matcher)))
+    (difflib-set-seq2 s word)
+    (cl-loop for x in possibilities
+             do (difflib-set-seq1 s x)
+             if (and (>= (difflib-real-quick-ratio s) cutoff)
+                     (>= (difflib-quick-ratio s) cutoff)
+                     (>= (difflib-ratio s) cutoff))
+             do (push (cons x (difflib-ratio s)) result))
+    (let ((res (cl-sort result #'> :key (lambda (cns) (cdr cns)))))
+      (setq result (cl-subseq
+                    res
+                    0
+                    (if (< (length res) n)
+                        (length res)
+                      n))))
+    (mapcar (lambda (lst) (car lst)) result)))
