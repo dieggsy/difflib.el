@@ -1,4 +1,5 @@
 (require 'cl-lib)
+(require 'eieio)
 
 (defvar difflib-pythonic-strings nil)
 
