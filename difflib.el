@@ -188,7 +188,7 @@ files). That may be because this is the only method of the 3 that has a
         (cl-destructuring-bind (alo ahi blo bhi) (pop queue)
           (let ((x (difflib-find-longest-match matcher alo ahi blo bhi)))
             (cl-destructuring-bind (i j k) x
-              (when k
+              (when (/= k 0)
                 (push x matching-blocks)
                 (when (and (< alo i) (< blo j))
                   (push (list alo i blo j) queue))
