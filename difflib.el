@@ -30,7 +30,8 @@
              :documentation "Should be set to False to disable the \"automatic junk heuristic\" that treants popular elements as junk.")
    (b2j :initarg :b2j
         :initform nil
-        :type list "For x in b, (alist-get x b2j) is "        )
+        :type list
+        :documentation "For x in b, (alist-get x b2j) is ")
    (fullbcount :initarg :fullbcount
                :initform nil
                :type list
