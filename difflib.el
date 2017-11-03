@@ -52,7 +52,6 @@
              :initform nil
              :type list
              :documentation "Nonjunk items in b treated as junk by the heuristic (if used)."))
-  :documentation
   "SequenceMatcher is a flexible class for comparing pairs of sequences of any
 type, so long as the sequence elements are hashable. The basic algorithm
 predates, and is a little fancier than, an algorithm published in the late
