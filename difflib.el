@@ -202,9 +202,12 @@ files). That may be because this is the only method of the 3 that has a
                   (push (list (+ i k) ahi (+ j k) bhi) queue)))))))
       (setq matching-blocks
             (sort matching-blocks ;; TODO: SORT BY WAT
-                  (lambda (lst1 lst2)
-                    (string< (format "%s" lst1)
-                             (format "%s" lst2)))))
+                  (lambda (a b)
+                    (if (= (car a) (car b))
+                        (if (= (cadr a) (cadr b))
+                            (< (caddr a) (caddr b))
+                          (< (cadr a) (cadr b)))
+                      (< (car a) (car b))))))
       (let ((i1 0)
             (j1 0)
             (k1 0)
