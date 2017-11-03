@@ -219,6 +219,35 @@ files). That may be because this is the only method of the 3 that has a
         (push (list la lb 0) non-adjacent)
         ;; (setq non-adjacent (reverse non-adjacent))
         (oset matcher :matching-blocks (reverse non-adjacent))))))
+
+(cl-defmethod difflib-get-opcodes ((matcher difflib-sequence-matcher))
+  (if (oref matcher :opcodes)
+      (oref matcher :opcodes)
+    (cl-symbol-macrolet ((answer (oref matcher :opcodes)))
+      (let ((i 0)
+            (j 0))
+        (cl-loop
+         for (ai bj size) in (difflib-get-matching-blocks matcher)
+         as tag = ""
+         do
+         (progn (cond ((and (< i ai) (< j bj))
+                       (setq tag "replace"))
+                      ((< i ai)
+                       (setq tag "delete"))
+                      ((< j bj)
+                       (setq tag "insert")))
+                (when (not (string-empty-p tag))
+                  (push (list tag i ai j bj) answer))
+                (setq i (+ ai size)
+                      j (+ bj size))
+                (when (/= size 0)
+                  (push (list "equal" ai i bj j) answer)))))
+      (setf answer (reverse answer)))))
+
+;; (cl-defmethod difflib-get-grouped-opcodes
+;;   ;; TODO: I don't need this for thefuck but it would be nice
+;;   )
+
 (cl-defmethod difflib-ratio ((matcher difflib-sequence-matcher))
   (let ((matches (apply '+ (mapcar (lambda (lst) (car (last lst)))
                                    (difflib-get-matching-blocks matcher)))))
