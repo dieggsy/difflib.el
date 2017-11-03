@@ -305,3 +305,5 @@ files). That may be because this is the only method of the 3 that has a
                         (length res)
                       n))))
     (mapcar (lambda (lst) (car lst)) result)))
+
+(provide 'difflib)
