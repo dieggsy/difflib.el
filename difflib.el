@@ -310,7 +310,7 @@ triple with (= n 0)."
             non-adjacent)
         (cl-loop for (i2 j2 k2) in matching-blocks
                  if (and (= (+ i1 k1) i2)
-                         (= (+ i1 k1) j2))
+                         (= (+ j1 k1) j2))
                  do (setq k1 (+ k1 k2))
                  else
                  do (progn
