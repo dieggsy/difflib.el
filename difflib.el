@@ -1,10 +1,12 @@
 (require 'cl-lib)
 
+(defvar difflib-pythonic-strings nil)
+
 (defmacro difflib--alist-get (key alist &optional default)
   `(alist-get ,key ,alist ,default nil #'equal))
 
 (defun difflib--calculate-ratio (matches length)
-  (if length
+  (if (/= length 0)
       (* 2.0 (/ (float matches) length))
     1.0))
 
@@ -15,11 +17,11 @@
            :documentation "A one-argument function that takes a sequence element and returns true if the element is junk. Nil means no element is considered junk.")
    (a :initarg :a
       :initform ""
-      :type string
+      :type sequence
       :documentation "The first of two sequences to be compared. By default, an empty string.")
    (b :initarg :b
       :initform ""
-      :type string
+      :type sequence
       :documentation "The second of two sequences to be compared. By default,an empty string.")
    (autojunk :initarg :autojunk
              :initform t
@@ -77,13 +79,17 @@ files). That may be because this is the only method of the 3 that has a
   (difflib-set-seq1 seq a)
   (difflib-set-seq2 seq b))
 
-(cl-defmethod difflib-set-seq1 ((matcher difflib-sequence-matcher) str)
-  (oset matcher :a str)
+(cl-defmethod difflib-set-seq1 ((matcher difflib-sequence-matcher) seq)
+  (oset matcher :a (if (and difflib-pythonic-strings (stringp seq))
+                       (split-string seq "" 'omit-nulls)
+                     seq))
   (oset matcher matching-blocks nil)
   (oset matcher opcodes nil))
 
-(cl-defmethod difflib-set-seq2 ((matcher difflib-sequence-matcher) str)
-  (oset matcher :b str)
+(cl-defmethod difflib-set-seq2 ((matcher difflib-sequence-matcher) seq)
+  (oset matcher :b (if (and difflib-pythonic-strings (stringp seq))
+                       (split-string seq "" 'omit-nulls)
+                     seq))
   (oset matcher matching-blocks nil)
   (oset matcher opcodes nil)
   (oset matcher fullbcount nil)
@@ -96,7 +102,7 @@ files). That may be because this is the only method of the 3 that has a
                        (isjunk (oref matcher :isjunk))
                        (popular (oref matcher :bpopular)))
     (cl-loop
-     for elt in (split-string b "" 'omit-nulls)
+     for elt being the elements of b
      as i = 0 then (1+ i)
      do (cl-symbol-macrolet ((exists (difflib--alist-get elt b2j)))
           (when (not exists)
@@ -136,7 +142,7 @@ files). That may be because this is the only method of the 3 that has a
        as newj2len = nil
        do (cl-loop
            named inner
-           for j in (difflib--alist-get (char-to-string (elt a i)) b2j nothing)
+           for j in (difflib--alist-get (elt a i) b2j nothing)
            do (cond ((< j blo) nil)
                     ((>= j bhi)
                      (cl-return-from inner))
@@ -149,31 +155,31 @@ files). That may be because this is the only method of the 3 that has a
        do (setq j2len newj2len))
       (while (and (> besti alo)
                   (> bestj blo)
-                  (not (member (char-to-string (elt b (1- bestj)))  bjunk))
-                  (= (elt a (1- besti))
-                     (elt b (1- bestj))))
+                  (not (member (elt b (1- bestj))  bjunk))
+                  (equal (elt a (1- besti))
+                         (elt b (1- bestj))))
         (setq besti (1- besti)
               bestj (1- bestj)
               bestsize (1+ bestsize)))
       (while (and (< (+ besti bestsize) ahi)
                   (< (+ bestj bestsize) bhi)
-                  (not (member (char-to-string (elt b (+ bestj bestsize))) bjunk))
-                  (= (elt a (+ besti bestsize))
-                     (elt b (+ bestj bestsize))))
+                  (not (member (elt b (+ bestj bestsize)) bjunk))
+                  (equal (elt a (+ besti bestsize))
+                         (elt b (+ bestj bestsize))))
         (setq bestsize (1+ bestsize)))
       (while (and (> besti alo)
                   (> bestj blo)
-                  (member (char-to-string (elt b (1- bestj))) bjunk)
-                  (= (elt a (1- besti))
-                     (elt b (1- bestj))))
+                  (member (elt b (1- bestj)) bjunk)
+                  (equal (elt a (1- besti))
+                         (elt b (1- bestj))))
         (setq besti (1- besti)
               bestj (1- bestj)
               bestsize (1+ bestsize)))
       (while (and (< (+ besti bestsize) ahi)
                   (< (+ bestj bestsize) bhi)
-                  (member (char-to-string (elt b (+ bestj bestsize))) bjunk)
-                  (= (elt a (+ besti bestsize))
-                     (elt b (+ bestj bestsize))))
+                  (member (elt b (+ bestj bestsize)) bjunk)
+                  (equal (elt a (+ besti bestsize))
+                         (elt b (+ bestj bestsize))))
         (setq bestsize (1+ bestsize)))
       (list besti bestj bestsize))))
 
@@ -261,13 +267,13 @@ files). That may be because this is the only method of the 3 that has a
                        (b (oref matcher :b))
                        (a (oref matcher :a)))
     (when (not fullbcount)
-      (cl-loop for elt in (split-string b "" 'omit-nulls)
+      (cl-loop for elt being the elements of b
                do (setf (difflib-alist-get elt fullbcount)
                         (1+ (difflib-alist-get elt fullbcount 0)))))
     (let (avail
           numb
           (matches 0))
-      (cl-loop for elt in (split-string a "" 'omit-nulls)
+      (cl-loop for elt being the elements of a
                do (let ((availhas (difflib-alist-get elt avail)))
                     (if availhas
                         (setq numb availhas)
@@ -291,7 +297,7 @@ files). That may be because this is the only method of the 3 that has a
   (let (result
         (s (difflib-sequence-matcher)))
     (difflib-set-seq2 s word)
-    (cl-loop for x in possibilities
+    (cl-loop for x being the elements of possibilities
              do (difflib-set-seq1 s x)
              if (and (>= (difflib-real-quick-ratio s) cutoff)
                      (>= (difflib-quick-ratio s) cutoff)
