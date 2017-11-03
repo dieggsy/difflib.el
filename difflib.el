@@ -73,7 +73,7 @@ though (like blank lines in ordinary text files, or maybe \"<P>\" lines in HTML
 files). That may be because this is the only method of the 3 that has a
 *concept* of \"junk\" <wink>.")
 
-(defmethod initialize-instance :after ((matcher difflib-sequence-matcher) &rest args)
+(cl-defmethod initialize-instance :after ((matcher difflib-sequence-matcher) &rest _args)
   (difflib-set-seqs matcher (oref matcher :a) (oref matcher :b)))
 
 (cl-defmethod difflib-set-seqs ((seq difflib-sequence-matcher) a b)
