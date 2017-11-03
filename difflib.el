@@ -246,7 +246,7 @@ files). That may be because this is the only method of the 3 that has a
                        (setq tag "delete"))
                       ((< j bj)
                        (setq tag "insert")))
-                (when (not (string-empty-p tag))
+                (when (not (string= tag ""))
                   (push (list tag i ai j bj) answer))
                 (setq i (+ ai size)
                       j (+ bj size))
