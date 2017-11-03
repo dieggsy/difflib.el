@@ -258,6 +258,7 @@ files). That may be because this is the only method of the 3 that has a
   (cl-block grouped-opcodes
     (let ((codes (difflib-get-opcodes matcher))
           tag
+          i1
           i2
           j1
           j2
