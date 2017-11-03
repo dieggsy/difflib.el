@@ -368,53 +368,52 @@ The tags are strings, with these meanings:
 
 Return a generator of groups with up to n lines of context.
 Each group is in the same format as returned by `difflib-get-opcodes'."
-  (cl-block grouped-opcodes
-    (let ((codes (difflib-get-opcodes matcher))
-          tag
-          i1
-          i2
-          j1
-          j2
-          groups)
-      (when (not codes)
-        (setq codes `(("equal" 0 1 0 1))))
-      (message "CODES: %S" codes)
-      (let ((first (car codes)))
-        (when (string= (car first) "equal")
-          (setq tag (car first)
-                i1 (cadr first)
-                i2 (caddr first)
-                j1 (nth 3 first)
-                j2 (nth 4 first))
-          (setcar codes (list tag (max i1 (- i2 n)) i2 (max j1 (- j2 n)) j2))))
-      (message "CODES: %S" codes)
-      (let ((last (car (last codes))))
-        (when (string= (car last) "equal")
-          (message "THIRDIF")
-          (setq tag (car last)
-                i1 (cadr last)
-                i2 (caddr last)
-                j1 (nth 3 last)
-                j2 (nth 4 last))
-          (setf (elt codes (1- (length codes))) (list tag i1 (min i2 (+ n i1)) j1 (min j2 (+ j1 n))))))
-      (message "CODES: %S" codes)
-      (let ((nn (* 2 n))
-            group)
-        (cl-loop
-         for (tag i1 i2 j1 j2) in codes
-         do (progn
-              (when (and (string= tag "equal")
-                         (> (- i2 i1) nn))
-                (push (list tag i1 (min i2 (+ i1 n)) j1 (min j2 (+ j1 n)))
-                      group)
-                (push (reverse group) groups)
-                (setq group '())
-                (setq i1 (max i1 (- i2 n))
-                      j1 (max j1 (- j2 n))))
-              (push (list tag i1 i2 j1 j2) group)))
-        (when (and group (not (= (length group) 1)) (string= (caar group) "equal"))
-          (push (reverse group) groups))
-        (reverse groups)))))
+  (let ((codes (difflib-get-opcodes matcher))
+        tag
+        i1
+        i2
+        j1
+        j2
+        groups)
+    (when (not codes)
+      (setq codes `(("equal" 0 1 0 1))))
+    (message "CODES: %S" codes)
+    (let ((first (car codes)))
+      (when (string= (car first) "equal")
+        (setq tag (car first)
+              i1 (cadr first)
+              i2 (caddr first)
+              j1 (nth 3 first)
+              j2 (nth 4 first))
+        (setcar codes (list tag (max i1 (- i2 n)) i2 (max j1 (- j2 n)) j2))))
+    (message "CODES: %S" codes)
+    (let ((last (car (last codes))))
+      (when (string= (car last) "equal")
+        (message "THIRDIF")
+        (setq tag (car last)
+              i1 (cadr last)
+              i2 (caddr last)
+              j1 (nth 3 last)
+              j2 (nth 4 last))
+        (setf (elt codes (1- (length codes))) (list tag i1 (min i2 (+ n i1)) j1 (min j2 (+ j1 n))))))
+    (message "CODES: %S" codes)
+    (let ((nn (* 2 n))
+          group)
+      (cl-loop
+       for (tag i1 i2 j1 j2) in codes
+       do (progn
+            (when (and (string= tag "equal")
+                       (> (- i2 i1) nn))
+              (push (list tag i1 (min i2 (+ i1 n)) j1 (min j2 (+ j1 n)))
+                    group)
+              (push (reverse group) groups)
+              (setq group '())
+              (setq i1 (max i1 (- i2 n))
+                    j1 (max j1 (- j2 n))))
+            (push (list tag i1 i2 j1 j2) group)))
+      (when (and group (not (= (length group) 1)) (string= (caar group) "equal"))
+        (push (reverse group) groups))
+      (reverse groups))))
 
 (cl-defmethod difflib-ratio ((matcher difflib-sequence-matcher))
   "Return a measure of the sequences' similarity.
