@@ -1,0 +1,17 @@
+* difflib.el
+
+This is a naive port of [[https://github.com/python/cpython/blob/c62f0cb3b1f6f9ca4ce463b1c99b0543bdfa38d6/Lib/difflib.py][python's difflib]] to emacs-lisp. I say naive because
+it's a little better than a literal translation of a book - it does what it
+needs to do, but it may not necessarily make use of the second language's power
+or beaty.
+
+At the moment, it only contains an implementation of the ~SequenceMatcher~ class
+and the ~get_close_matches~ function, since in my opinion those are the most
+useful for elisp, and I wanted to use them for another project. (See todo table
+below).
+
+** Todo [1/4]
+ - [X] Port SequenceMatcher
+ - [ ] Use hash tables instead of alists?
+ - [ ] Port Differ
+ - [ ] Port HtmlDiff
