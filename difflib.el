@@ -7,7 +7,7 @@
 ;; Created: 2017-10-28
 ;; Version: 0.1.0
 ;; Keywords: matching tools string
-;; Package-Requires: ((emacs "24.4"))
+;; Package-Requires: ((emacs "25"))
 
 ;; This file is not part of GNU Emacs.
 
