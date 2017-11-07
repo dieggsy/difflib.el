@@ -86,11 +86,11 @@
              :initform nil
              :type list
              :documentation "Nonjunk items in b treated as junk by the heuristic (if used)."))
-  "SequenceMatcher is a flexible class for comparing pairs of sequences of any
-type, so long as the sequence elements are hashable. The basic algorithm
-predates, and is a little fancier than, an algorithm published in the late
-1980's by Ratcliff and Obershelp under the hyperbolic name \"gestalt pattern
-matching\". The basic idea is to find the longest contiguous matching
+  "`difflib-sequence-matcher' is a flexible class for comparing pairs of
+sequences of any type, so long as the sequence elements are hashable. The basic
+algorithm predates, and is a little fancier than, an algorithm published in the
+late 1980's by Ratcliff and Obershelp under the hyperbolic name \"gestalt
+pattern matching\". The basic idea is to find the longest contiguous matching
 subsequence that contains no \"junk\" elements (R-O doesn't address junk). The
 same idea is then applied recursively to the pieces of the sequences to the
 left and to the right of the matching subsequence. This does not yield minimal
@@ -111,8 +111,8 @@ See the Differ class for a fancy human-friendly file differencer, which uses
 SequenceMatcher both to compare sequences of lines, and to compare sequences of
 characters within similar (near-matching) lines.
 
-See also function get_close_matches() in this module, which shows how simple
-code building on SequenceMatcher can be used to do useful work.")
+See also function `difflib-get-close-matches' in this module, which shows how
+simple code building on SequenceMatcher can be used to do useful work.")
 
 (cl-defmethod initialize-instance :after ((matcher difflib-sequence-matcher) &rest _args)
   "Construct a difflib-sequence-matcher."
@@ -137,8 +137,8 @@ See also `difflib-set-seqs' and `difflib-set-seq2'."
   (oset matcher :a (if (and difflib-pythonic-strings (stringp seq))
                        (split-string seq "" 'omit-nulls)
                      seq))
-  (oset matcher matching-blocks nil)
-  (oset matcher opcodes nil))
+  (oset matcher :matching-blocks nil)
+  (oset matcher :opcodes nil))
 
 (cl-defmethod difflib-set-seq2 ((matcher difflib-sequence-matcher) seq)
   "Set the second sequence to be compared to SEQ.
@@ -155,9 +155,9 @@ See also `difflib-set-seqs' and `difflib-set-seq1'.
   (oset matcher :b (if (and difflib-pythonic-strings (stringp seq))
                        (split-string seq "" 'omit-nulls)
                      seq))
-  (oset matcher matching-blocks nil)
-  (oset matcher opcodes nil)
-  (oset matcher fullbcount nil)
+  (oset matcher :matching-blocks nil)
+  (oset matcher :opcodes nil)
+  (oset matcher :fullbcount nil)
   (difflib--chain-b matcher))
 
 (cl-defmethod difflib--chain-b ((matcher difflib-sequence-matcher))
@@ -393,7 +393,8 @@ Each group is in the same format as returned by `difflib-get-opcodes'."
               i2 (caddr last)
               j1 (nth 3 last)
               j2 (nth 4 last))
-        (setf (elt codes (1- (length codes))) (list tag i1 (min i2 (+ n i1)) j1 (min j2 (+ j1 n))))))
+        (setf (elt codes (1- (length codes)))
+              (list tag i1 (min i2 (+ n i1)) j1 (min j2 (+ j1 n))))))
     (let ((nn (* 2 n))
           group)
       (cl-loop
