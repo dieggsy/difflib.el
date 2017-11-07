@@ -45,6 +45,7 @@
       (* 2.0 (/ (float matches) length))
     1.0))
 
+;;;###autoload
 (defclass difflib-sequence-matcher ()
   ((isjunk :initarg :isjunk
            :initform nil
@@ -468,6 +469,7 @@ to compute than either `difflib-ratio' or `difflib-quick-ratio'."
         (lb (length (oref matcher :b))))
     (difflib--calculate-ratio (min la lb) (+ la lb))))
 
+;;;###autoload
 (cl-defun difflib-get-close-matches (word possibilities &key (n 3) (cutoff 0.6))
   "Use SequenceMatcher to return list of the best \"good enough\" matches.
 
