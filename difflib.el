@@ -440,17 +440,17 @@ faster to compute."
                        (a (oref matcher :a)))
     (when (not fullbcount)
       (cl-loop for elt being the elements of b
-               do (setf (difflib-alist-get elt fullbcount)
-                        (1+ (difflib-alist-get elt fullbcount 0)))))
+               do (setf (difflib--alist-get elt fullbcount)
+                        (1+ (difflib--alist-get elt fullbcount 0)))))
     (let (avail
           numb
           (matches 0))
       (cl-loop for elt being the elements of a
-               do (let ((availhas (difflib-alist-get elt avail)))
+               do (let ((availhas (difflib--alist-get elt avail)))
                     (if availhas
                         (setq numb availhas)
-                      (setq numb (difflib-alist-get elt fullbcount 0)))
-                    (setf (difflib-alist-get elt avail) (1- numb))
+                      (setq numb (difflib--alist-get elt fullbcount 0)))
+                    (setf (difflib--alist-get elt avail) (1- numb))
                     (when (> numb 0)
                       (setq matches (1+ matches)))))
       (difflib--calculate-ratio matches (+ (length a)
