@@ -32,7 +32,8 @@
 (require 'cl-lib)
 (require 'eieio)
 
-(defvar difflib-pythonic-strings nil)
+(defvar difflib-pythonic-strings nil
+  "Treat chars in strings as single-char-length strings.")
 
 (defmacro difflib--alist-get (key alist &optional default)
   "Equivalent to `(alist-get KEY ALIST DEFAULT nil #'equal)'."
