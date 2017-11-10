@@ -49,7 +49,7 @@
 (defclass difflib-sequence-matcher ()
   ((isjunk :initarg :isjunk
            :initform nil
-           :type (or cons symbol)
+           :type (or null function)
            :documentation "A one-argument function that takes a sequence element and returns true if the element is junk. Nil means no element is considered junk.")
    (a :initarg :a
       :initform ""
