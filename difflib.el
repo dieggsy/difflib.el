@@ -508,6 +508,178 @@ list, sorted by similarity score, most similar first."
                       n))))
     (mapcar (lambda (lst) (car lst)) result)))
 
+(defun difflib--count-leading (line ch)
+  (let ((i 0)
+        (n (length line)))
+    (while (and (< i n) (= (elt line i) ch))
+      (setq i (1+ i)))
+    i))
+
+(defclass difflib-differ ()
+  ((linejunk :initarg :linejunk
+             :initform nil
+             :type (or null function)
+             :documentation "A function that should accept a single string argument,and return true iff the string is junk. The module-level function `difflib-is-line-junk-p' may be used to filter out lines without visible characters, except for at most one splat ('#').  It is recommended to leave linejunk nil; the underlying difflib-sequence-matcher class has an adaptive notion of \"noise\" lines that's better than any static definition the author has ever been able to craft.")
+   (charjunk :initarg :charjunk
+             :initform nil
+             :type (or null function)
+             :documentation "A function that should accept a string of length 1. The module-level function `difflib-is-character-junk-p' may be used to filter out whitespace characters (a blank or tab; **note**: bad idea to include newline in this!).  Use of `difflib-is-character-junk-p' is recommended."))
+  "`difflib-differ' is a class for comparing sequences of lines of text,
+and producing human-readable differences or deltas. The differ uses
+`difflib-sequence-matcher' both to compare sequences of lines, and to compare
+sequences of characters within similar (near-matching) lines.
+
+Each line of a differ delta begins with a two-letter code:
+
+    '- '    line unique to sequence 1
+    '+ '    line unique to sequence 2
+    '  '    line common to both sequences
+    '? '    line not present in either input sequence
+
+Lines beginning with '? ' attempt to guide the eye to intraline differences,
+and were not present in either input sequence. These lines can be confusing if
+the sequences contain tab characters.
+
+Note that differ makes no claim to produce a *minimal* diff. To the contrary,
+minimal diffs are often counter-intuitive, because they synch up anywhere
+possible, sometimes accidental matches 100 pages apart. Restricting synch
+points to contiguous matches preserves some notion of locality, at the
+occasional cost of producing a longer diff.")
+
+(cl-defmethod difflib-compare ((differ difflib-differ) a b)
+  "Compare two sequences of lines; generate the resulting delta.
+
+Each sequence must contain individual single-line strings ending with newlines.
+The delta generated consists of newline- terminated strings."
+  (let ((cruncher (difflib-sequence-matcher :isjunk (oref differ :linejunk) :a a :b b))
+        g)
+    (cl-loop for (tag alo ahi blo bhi) in (difflib-get-opcodes cruncher)
+             do (pcase tag
+                  ("replace"
+                   (setq g (difflib--fancy-replace differ a alo ahi b blo bhi)))
+                  ("delete" (setq g (difflib--dump "-" a alo ahi)))
+                  ("insert" (setq g (difflib--dump "+" b blo bhi)))
+                  ("equal" (setq g (difflib--dump " " a alo ahi)))
+                  (_ (error "Unknown tag %s" tag)))
+             append g)))
+
+(cl-defmethod difflib--dump ((differ difflib-differ) tag x lo hi)
+  (cl-loop for i in (number-sequence lo (1- hi))
+           collect (format "%s %s" tag (elt x i))))
+
+(cl-defmethod difflib--plain-replace ((differ difflib-differ) a alo ahi b blo bhi)
+  (cl-assert (and (< alo ahi) (< blo bhi)))
+  (let (first
+        second)
+    (if (< (- bhi blo) (- ahi alo))
+        (progn
+          (setq first (difflib--dump differ "+" b blo bhi))
+          (setq second (difflib--dump differ "-" a alo ahi)))
+      (setq first (difflib--dump differ "-" a alo ahi))
+      (setq second (difflib--dump differ "+" b blo bhi)))))
+
+(cl-defmethod difflib--fancy-replace ((differ difflib-differ) a alo ahi b blo bhi)
+  (let ((best-ratio 0.74)
+        (cutoff 0.75)
+        (cruncher (difflib-sequence-matcher (oref differ :charjunk)))
+        (outer-range (number-sequence blo (1- bhi)))
+        (inner-range (number-sequence alo (1- ahi)))
+        eqi
+        eqj
+        best-i
+        best-j
+        results)
+    (cl-block fancy-replace
+      (cl-loop for j in outer-range
+               as bj = (elt b j)
+               do (difflib-set-seq2 cruncher bj)
+               do (cl-loop
+                   for i in inner-range
+                   as ai = (elt a i)
+                   do (cl-block inner
+                        (when (equal ai bj)
+                          (when (not eqi)
+                            (setq eqi i
+                                  eqj j))
+                          (cl-return-from inner))
+                        (difflib-set-seq1 cruncher ai)
+                        (when (and (> (difflib-real-quick-ratio cruncher)
+                                      best-ratio)
+                                   (> (difflib-quick-ratio cruncher)
+                                      best-ratio)
+                                   (> (difflib-ratio cruncher)
+                                      best-ratio))
+                          (setq best-ratio (difflib-ratio cruncher)
+                                best-i i
+                                best-j j)))))
+      (if (< best-ratio cutoff)
+          (progn
+            (when (not eqi)
+              (cl-return-from fancy-replace
+                (difflib--plain-replace differ a alo ahi b blo bhi)))
+            (setq best-i eqi
+                  best-j eqj
+                  best-ratio 1.0))
+        (setq eqi nil))
+      (setq results (append results (difflib--fancy-helper differ a alo best-i b blo best-j)))
+      (let ((aelt (elt a best-i))
+            (belt (elt b best-j)))
+        (if (not eqi)
+            (let ((atags "")
+                  (btags ""))
+              (difflib-set-seqs cruncher aelt belt)
+              (cl-loop for (tag ai1 ai2 bj1 bj2) in (difflib-get-opcodes cruncher)
+                       as la = (- ai2 ai1)
+                       as lb = (- bj2 bj1)
+                       do (pcase tag
+                            ("replace"
+                             (setq atags (concat atags (make-string la ?^)))
+                             (setq btags (concat btags (make-string lb ?^))))
+                            ("delete"
+                             (setq atags (concat atags (make-string la ?-))))
+                            ("insert"
+                             (setq btags (concat btags (make-string lb ?+))))
+                            ("equal"
+                             (setq atags (concat atags (make-string  la ?\s)))
+                             (setq btags (concat btags (make-string  lb ?\s))))
+                            (_ (error "Unknown tag %s" tag))))
+              (setq results (append results (difflib--qformat differ aelt belt atags btags))))
+          (setq results (append results (list (concat "  " aelt)))))
+        (setq results (append results (difflib--fancy-helper differ a (1+ best-i) ahi b (1+ best-j) bhi)))))))
+
+(cl-defmethod difflib--fancy-helper ((differ difflib-differ) a alo ahi b blo bhi)
+  (cond ((< alo ahi)
+         (if (< blo bhi)
+             (difflib--fancy-replace differ a alo ahi b blo bhi)
+           (difflib--dump differ "-" a alo ahi)))
+        ((< blo bhi)
+         (difflib--dump differ "+" b blo bhi))))
+
+(cl-defmethod difflib--qformat ((differ difflib-differ) aline bline atags btags)
+  (let* (result
+         (common (min (difflib--count-leading aline ?\t)
+                      (difflib--count-leading bline ?\t)))
+         (common (min common (difflib--count-leading (cl-subseq atags 0 common)
+                                                     ?\s)))
+         (common (min common (difflib--count-leading (cl-subseq btags 0 common)
+                                                     ?\s)))
+         (atags (string-trim-right (cl-subseq atags common)))
+         (btags (string-trim-right (cl-subseq btags common))))
+    (push (concat "- " aline) result)
+    (message "ATAGS: %s" atags)
+    (when (not (string= atags ""))
+      (push (format "? %s%s\n"
+                    (make-string common ?\t)
+                    atags)
+            result))
+    (push (concat "+ " bline) result)
+    (when (not (string= btags ""))
+      (push (format "? %s%s\n"
+                    (make-string common ?\t)
+                    btags)
+            result))
+    (reverse result)))
+
 (provide 'difflib)
 
 ;;; difflib.el ends here
