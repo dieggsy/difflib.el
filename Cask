@@ -7,6 +7,7 @@
 (development
  (depends-on "cl-lib")
  (depends-on "ert-runner")
+ (depends-on "cl-generic")
  (depends-on "undercover")
  (depends-on "ht")
  (depends-on "eieio"))
