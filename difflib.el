@@ -361,12 +361,13 @@ The tags are strings, with these meanings:
                   (push (list "equal" ai i bj j) answer)))))
       (setq answer (reverse answer)))))
 
-(cl-defmethod difflib-get-grouped-opcodes ((matcher difflib-sequence-matcher) &optional &key (n 3))
+(cl-defmethod difflib-get-grouped-opcodes ((matcher difflib-sequence-matcher) &optional &key n)
   "Isolate change clusters by eliminating ranges with no changes.
 
 Return a generator of groups with up to n lines of context.
 Each group is in the same format as returned by `difflib-get-opcodes'."
-  (let ((codes (difflib-get-opcodes matcher))
+  (let ((n (if n n 3))
+        (codes (difflib-get-opcodes matcher))
         tag
         i1
         i2
