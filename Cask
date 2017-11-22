@@ -8,4 +8,5 @@
  (depends-on "cl-lib")
  (depends-on "ert-runner")
  (depends-on "undercover")
+ (depends-on "ht")
  (depends-on "eieio"))

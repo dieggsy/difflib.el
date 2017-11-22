@@ -31,13 +31,10 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'eieio)
+(require 'ht)
 
 (defvar difflib-pythonic-strings nil
   "Treat chars in strings as single-char-length strings.")
-
-(defmacro difflib--alist-get (key alist &optional default)
-  "Equivalent to `(alist-get KEY ALIST DEFAULT nil #'equal)'."
-  `(alist-get ,key ,alist ,default nil #'equal))
 
 (defun difflib--calculate-ratio (matches length)
   "When (> LENGTH 0), return (* 2.0 (/ (float MATCHES) LENGTH))."
@@ -64,12 +61,12 @@
              :type boolean
              :documentation "Should be set to False to disable the \"automatic junk heuristic\" that treants popular elements as junk.")
    (b2j :initarg :b2j
-        :initform nil
-        :type list
-        :documentation "For x in b, (alist-get x b2j) is ")
+        :initform (make-hash-table :test #'equal)
+        :type hash-table
+        :documentation "For x in b, (gethash x b2j) is ")
    (fullbcount :initarg :fullbcount
-               :initform nil
-               :type list
+               :initform (make-hash-table :test #'equal)
+               :type hash-table
                :documentation "For x in b, the number of times x appears in b.")
    (matching-blocks :initarg :matching-blocks
                     :initform nil
@@ -158,7 +155,7 @@ See also `difflib-set-seqs' and `difflib-set-seq1'.
                      seq))
   (oset matcher :matching-blocks nil)
   (oset matcher :opcodes nil)
-  (oset matcher :fullbcount nil)
+  (oset matcher :fullbcount (make-hash-table :test #'equal))
   (difflib--chain-b matcher))
 
 (cl-defmethod difflib--chain-b ((matcher difflib-sequence-matcher))
@@ -170,28 +167,28 @@ See also `difflib-set-seqs' and `difflib-set-seq1'.
     (cl-loop
      for elt being the elements of b
      as i = 0 then (1+ i)
-     do (cl-symbol-macrolet ((exists (difflib--alist-get elt b2j)))
+     do (cl-symbol-macrolet ((exists (gethash elt b2j)))
           (when (not exists)
             (setf exists nil))
           (setf exists (append exists (list i)))))
     (when isjunk
       (cl-loop
-       for (elt . val) in b2j
+       for elt in (ht-keys b2j)
        if (funcall isjunk elt)
        do (unless (member elt junk)
             (push elt junk)))
       (cl-loop
        for elt in junk
-       do (oset matcher b2j (delq (assoc elt b2j) b2j))))
+       do (remhash elt b2j)))
     (let ((n (length b)))
       (when (and (oref matcher :autojunk) (>= n 200))
         (let ((ntest (1+ (/ n 100))))
-          (cl-loop for (elt . idxs) in b2j
+          (cl-loop for (elt . idxs) in (ht->alist b2j)
                    if (> (length idxs) ntest)
                    do (unless (member elt popular)
                         (push elt popular)))
           (cl-loop for elt in popular
-                   do (oset matcher b2j (delq (assoc elt b2j) b2j))))))))
+                   do (remhash elt b2j)))))))
 
 (cl-defmethod difflib-find-longest-match ((matcher difflib-sequence-matcher) alo ahi blo bhi)
   "Find longest matching block in (cl-subseq a ALO AHI) and (cl-subseq b BLO BHI).
@@ -222,19 +219,19 @@ junk happens to be adjacent to an \"interesting\" match."
     (let ((besti alo)
           (bestj blo)
           (bestsize 0)
-          j2len
+          (j2len (make-hash-table :test #'equal))
           nothing)
       (cl-loop
        for i in (number-sequence alo (1- ahi))
-       as newj2len = nil
+       as newj2len = (make-hash-table :test #'equal)
        do (cl-loop
            named inner
-           for j in (difflib--alist-get (elt a i) b2j nothing)
+           for j in (gethash (elt a i) b2j nothing)
            do (cond ((< j blo) nil)
                     ((>= j bhi)
                      (cl-return-from inner))
-                    (t (let ((k (1+ (difflib--alist-get (1- j) j2len 0))))
-                         (setf (difflib--alist-get j newj2len) k)
+                    (t (let ((k (1+ (gethash (1- j) j2len 0))))
+                         (setf (gethash j newj2len) k)
                          (if (> k bestsize)
                              (setq besti (1+ (- i k))
                                    bestj (1+ (- j k))
@@ -441,19 +438,19 @@ faster to compute."
   (cl-symbol-macrolet ((fullbcount (oref matcher :fullbcount))
                        (b (oref matcher :b))
                        (a (oref matcher :a)))
-    (when (not fullbcount)
+    (when (zerop (hash-table-count fullbcount))
       (cl-loop for elt being the elements of b
-               do (setf (difflib--alist-get elt fullbcount)
-                        (1+ (difflib--alist-get elt fullbcount 0)))))
-    (let (avail
+               do (setf (gethash elt fullbcount)
+                        (1+ (gethash elt fullbcount 0)))))
+    (let ((avail (make-hash-table :test #'equal))
           numb
           (matches 0))
       (cl-loop for elt being the elements of a
-               do (let ((availhas (difflib--alist-get elt avail)))
+               do (let ((availhas (gethash elt avail)))
                     (if availhas
                         (setq numb availhas)
-                      (setq numb (difflib--alist-get elt fullbcount 0)))
-                    (setf (difflib--alist-get elt avail) (1- numb))
+                      (setq numb (gethash elt fullbcount 0)))
+                    (setf (gethash elt avail) (1- numb))
                     (when (> numb 0)
                       (setq matches (1+ matches)))))
       (difflib--calculate-ratio matches (+ (length a)
@@ -476,7 +473,7 @@ to compute than either `difflib-ratio' or `difflib-quick-ratio'."
 WORD is a sequence for which close matches are desired (typically a string).
 
 POSSIBILITIES is a list of sequences against which to match word
-(typically a list of strings).
+;; (typically a list of strings).
 
 Optional arg N (default 3) is the maximum number of close matches to return. N
 must be > 0.
