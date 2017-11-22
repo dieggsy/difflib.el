@@ -1,6 +1,6 @@
 * difflib.el
-[[https://travis-ci.org/dieggsy/difflib.el.svg?branch=hash-table][file:https://travis-ci.org/dieggsy/difflib.el.svg?branch=hash-table]]
-[[https://coveralls.io/github/dieggsy/difflib.el?branch=hash-table][file:https://coveralls.io/repos/github/dieggsy/difflib.el/badge.svg?branch=hash-table]]
+[[https://travis-ci.org/dieggsy/difflib.el.svg?branch=master][file:https://travis-ci.org/dieggsy/difflib.el.svg?branch=master]]
+[[https://coveralls.io/github/dieggsy/difflib.el?branch=master][file:https://coveralls.io/repos/github/dieggsy/difflib.el/badge.svg?branch=master]]
 
 This is a naive port of [[https://github.com/python/cpython/blob/c62f0cb3b1f6f9ca4ce463b1c99b0543bdfa38d6/Lib/difflib.py][python's difflib]] to emacs-lisp. I say naive because
 it's a little better than a literal translation of a book - it does what it
