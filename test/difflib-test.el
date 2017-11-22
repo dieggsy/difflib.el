@@ -1,5 +1,9 @@
-(require 'difflib)
+(when (require 'undercover nil t)
+  (undercover "difflib.el"))
+
 (require 'cl-lib)
+(require 'difflib)
+(require 'ert)
 
 (ert-deftest difflib-test-sequence-matcher-example ()
   ;; SequenceMatcher docstring
@@ -19,6 +23,7 @@
                    '(("equal" 0 8 0 8)
                      ("insert" 8 8 8 17)
                      ("equal" 8 29 17 38))))))
+
 (ert-deftest difflib-test-set-seq-example ()
   (let ((s (difflib-sequence-matcher :a "abcd" :b "bcde")))
     (should (cl-equalp (difflib-ratio s)
