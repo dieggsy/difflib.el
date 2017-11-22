@@ -7,7 +7,7 @@
 ;; Created: 2017-10-28
 ;; Version: 0.1.0
 ;; Keywords: matching tools string
-;; Package-Requires: ((emacs "25"))
+;; Package-Requires: ((emacs "24") (cl-generic "0.3"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -115,7 +115,7 @@ simple code building on SequenceMatcher can be used to do useful work.")
 
 (cl-defmethod initialize-instance :after ((matcher difflib-sequence-matcher) &rest _args)
   "Construct a difflib-sequence-matcher."
-  (difflib-set-seqs matcher (oref matcher :a) (oref matcher :b)))
+  (difflib-set-seqs matcher (eieio-oref matcher 'a) (eieio-oref matcher 'b)))
 
 (cl-defmethod difflib-set-seqs ((seq difflib-sequence-matcher) a b)
   "Set the two sequences to be compared to A and B."
@@ -160,11 +160,11 @@ See also `difflib-set-seqs' and `difflib-set-seq1'.
   (difflib--chain-b matcher))
 
 (cl-defmethod difflib--chain-b ((matcher difflib-sequence-matcher))
-  (cl-symbol-macrolet ((b (oref matcher :b))
-                       (b2j (oref matcher :b2j))
-                       (junk (oref matcher :bjunk))
-                       (isjunk (oref matcher :isjunk))
-                       (popular (oref matcher :bpopular)))
+  (cl-symbol-macrolet ((b (eieio-oref matcher 'b))
+                       (b2j (eieio-oref matcher 'b2j))
+                       (junk (eieio-oref matcher 'bjunk))
+                       (isjunk (eieio-oref matcher 'isjunk))
+                       (popular (eieio-oref matcher 'bpopular)))
     (cl-loop
      for elt being the elements of b
      as i = 0 then (1+ i)
@@ -182,7 +182,7 @@ See also `difflib-set-seqs' and `difflib-set-seq1'.
        for elt in junk
        do (remhash elt b2j)))
     (let ((n (length b)))
-      (when (and (oref matcher :autojunk) (>= n 200))
+      (when (and (eieio-oref matcher 'autojunk) (>= n 200))
         (let ((ntest (1+ (/ n 100))))
           (cl-loop for (elt . idxs) in (ht->alist b2j)
                    if (> (length idxs) ntest)
@@ -213,10 +213,10 @@ but with the additional restriction that no junk element appears in the block.
 Then that block is extended as far as possible by matching (only) junk elements
 on both sides. So the resulting block never matches on junk except as identical
 junk happens to be adjacent to an \"interesting\" match."
-  (cl-symbol-macrolet ((a (oref matcher :a))
-                       (b (oref matcher :b))
-                       (b2j (oref matcher :b2j))
-                       (bjunk (oref matcher :bjunk)))
+  (cl-symbol-macrolet ((a (eieio-oref matcher 'a))
+                       (b (eieio-oref matcher 'b))
+                       (b2j (eieio-oref matcher 'b2j))
+                       (bjunk (eieio-oref matcher 'bjunk)))
     (let ((besti alo)
           (bestj blo)
           (bestsize 0)
@@ -280,10 +280,10 @@ triples never describe adjacent equal blocks.
 
 The last triple is a dummy, (list (length a) (length b) 0), and is the only
 triple with (= n 0)."
-  (if (oref matcher :matching-blocks)
-      (oref matcher :matching-blocks)
-    (let* ((la (length (oref matcher :a)))
-           (lb (length (oref matcher :b)))
+  (if (eieio-oref matcher 'matching-blocks)
+      (eieio-oref matcher 'matching-blocks)
+    (let* ((la (length (eieio-oref matcher 'a)))
+           (lb (length (eieio-oref matcher 'b)))
            (queue `((0 ,la 0 ,lb)))
            matching-blocks)
       (while queue
@@ -340,9 +340,9 @@ The tags are strings, with these meanings:
  'insert':  (cl-subseq b j1 j3) should be inserted at (cl-subseq a i1 i1).
             Note that (= i1 i2) in this case.
  'equal':   (equal (cl-subseq a i1 i3) (cl-subseq b j1 j2))."
-  (if (oref matcher :opcodes)
-      (oref matcher :opcodes)
-    (cl-symbol-macrolet ((answer (oref matcher :opcodes)))
+  (if (eieio-oref matcher 'opcodes)
+      (eieio-oref matcher 'opcodes)
+    (cl-symbol-macrolet ((answer (eieio-oref matcher 'opcodes)))
       (let ((i 0)
             (j 0))
         (cl-loop
@@ -428,17 +428,17 @@ upper bound."
                                    (difflib-get-matching-blocks matcher)))))
     (difflib--calculate-ratio matches
                               (+
-                               (length (oref matcher :a))
-                               (length (oref matcher :b))))))
+                               (length (eieio-oref matcher 'a))
+                               (length (eieio-oref matcher 'b))))))
 
 (cl-defmethod difflib-quick-ratio ((matcher difflib-sequence-matcher))
   "Return an upper bound on `difflib-ratio' relatively quickly.
 
 This isn't defined beyond that it is an upper bound on `difflib-ratio', and is
 faster to compute."
-  (cl-symbol-macrolet ((fullbcount (oref matcher :fullbcount))
-                       (b (oref matcher :b))
-                       (a (oref matcher :a)))
+  (cl-symbol-macrolet ((fullbcount (eieio-oref matcher 'fullbcount))
+                       (b (eieio-oref matcher 'b))
+                       (a (eieio-oref matcher 'a)))
     (when (zerop (hash-table-count fullbcount))
       (cl-loop for elt being the elements of b
                do (setf (gethash elt fullbcount)
@@ -463,8 +463,8 @@ faster to compute."
 This isn't defined beyond that it is an upper bound on .ratio(), and is faster
 to compute than either `difflib-ratio' or `difflib-quick-ratio'."
 
-  (let ((la (length (oref matcher :a)))
-        (lb (length (oref matcher :b))))
+  (let ((la (length (eieio-oref matcher 'a)))
+        (lb (length (eieio-oref matcher 'b))))
     (difflib--calculate-ratio (min la lb) (+ la lb))))
 
 ;;;###autoload
