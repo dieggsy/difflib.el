@@ -160,11 +160,12 @@ See also `difflib-set-seqs' and `difflib-set-seq1'.
   (difflib--chain-b matcher))
 
 (cl-defmethod difflib--chain-b ((matcher difflib-sequence-matcher))
-  (cl-symbol-macrolet ((b (eieio-oref matcher 'b))
-                       (b2j (eieio-oref matcher 'b2j))
-                       (junk (eieio-oref matcher 'bjunk))
-                       (isjunk (eieio-oref matcher 'isjunk))
-                       (popular (eieio-oref matcher 'bpopular)))
+  (with-slots (b
+               b2j
+               (junk bjunk)
+               isjunk
+               (popular bpopular))
+      matcher
     (cl-loop
      for elt being the elements of b
      as i = 0 then (1+ i)
@@ -213,10 +214,7 @@ but with the additional restriction that no junk element appears in the block.
 Then that block is extended as far as possible by matching (only) junk elements
 on both sides. So the resulting block never matches on junk except as identical
 junk happens to be adjacent to an \"interesting\" match."
-  (cl-symbol-macrolet ((a (eieio-oref matcher 'a))
-                       (b (eieio-oref matcher 'b))
-                       (b2j (eieio-oref matcher 'b2j))
-                       (bjunk (eieio-oref matcher 'bjunk)))
+  (with-slots (a b b2j bjunk) matcher
     (let ((besti alo)
           (bestj blo)
           (bestsize 0)
@@ -342,7 +340,7 @@ The tags are strings, with these meanings:
  'equal':   (equal (cl-subseq a i1 i3) (cl-subseq b j1 j2))."
   (if (eieio-oref matcher 'opcodes)
       (eieio-oref matcher 'opcodes)
-    (cl-symbol-macrolet ((answer (eieio-oref matcher 'opcodes)))
+    (with-slots ((answer opcodes)) matcher
       (let ((i 0)
             (j 0))
         (cl-loop
@@ -436,9 +434,7 @@ upper bound."
 
 This isn't defined beyond that it is an upper bound on `difflib-ratio', and is
 faster to compute."
-  (cl-symbol-macrolet ((fullbcount (eieio-oref matcher 'fullbcount))
-                       (b (eieio-oref matcher 'b))
-                       (a (eieio-oref matcher 'a)))
+  (with-slots (fullbcount b a) matcher
     (when (zerop (hash-table-count fullbcount))
       (cl-loop for elt being the elements of b
                do (setf (gethash elt fullbcount)
