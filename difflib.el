@@ -361,7 +361,7 @@ The tags are strings, with these meanings:
                   (push (list "equal" ai i bj j) answer)))))
       (setq answer (reverse answer)))))
 
-(cl-defmethod difflib-get-grouped-opcodes ((matcher difflib-sequence-matcher) &key (n 3))
+(cl-defmethod difflib-get-grouped-opcodes ((matcher difflib-sequence-matcher) &optional &key (n 3))
   "Isolate change clusters by eliminating ranges with no changes.
 
 Return a generator of groups with up to n lines of context.
