@@ -7,9 +7,12 @@ env:
   - EVM_EMACS=emacs-25.2-travis
   - EVM_EMACS=emacs-25.3-travis
   - EVM_EMACS=emacs-26-pretest-travis
+addons:
+  apt:
+    packages:
+      - gnutls-bin
 before_install:
   - curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
-  - sudo apt install gnutls-bin
   - evm install $EVM_EMACS --use --skip
   - cask
   # temporary fix for the ert+duration reporter, when compiled gives
