@@ -7,7 +7,7 @@
 
 (ert-deftest difflib-test-sequence-matcher-example ()
   ;; SequenceMatcher docstring
-  (let ((s (difflib-sequence-matcher
+  (let ((s (difflib-sequence-matcher "sequence-matcher"
             :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
                                              " "
                                            ?\s)))
@@ -25,7 +25,7 @@
                      ("equal" 8 29 17 38))))))
 
 (ert-deftest difflib-test-set-seq-example ()
-  (let ((s (difflib-sequence-matcher :a "abcd" :b "bcde")))
+  (let ((s (difflib-sequence-matcher "sequence-matcher" :a "abcd" :b "bcde")))
     (should (cl-equalp (difflib-ratio s)
                        0.75))
     (difflib-set-seq1 s "bcde")
@@ -37,10 +37,10 @@
                        1.0))))
 
 (ert-deftest difflib-test-find-longest-match-example ()
-  (let ((s (difflib-sequence-matcher :a " abcd" :b "abcd abcd")))
+  (let ((s (difflib-sequence-matcher "sequence-matcher" :a " abcd" :b "abcd abcd")))
     (should (equal (difflib-find-longest-match s 0 5 0 9)
                    '(0 4 5))))
-  (let ((s (difflib-sequence-matcher
+  (let ((s (difflib-sequence-matcher "sequence-matcher"
             :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
                                              " "
                                            ?\s)))
@@ -48,12 +48,12 @@
             :b "abcd abcd")))
     (should (equal (difflib-find-longest-match s 0 5 0 9)
                    '(1 0 4))))
-  (let ((s (difflib-sequence-matcher :a "ab" :b "c")))
+  (let ((s (difflib-sequence-matcher "sequence-matcher" :a "ab" :b "c")))
     (should (equal (difflib-find-longest-match s 0 2 0 1)
                    '(0 0 0)))))
 
 (ert-deftest difflib-test-get-matching-blocks-example ()
-  (let ((s (difflib-sequence-matcher :a "abxcd" :b "abcd")))
+  (let ((s (difflib-sequence-matcher "sequence-matcher" :a "abxcd" :b "abcd")))
     (should (equal (difflib-get-matching-blocks s)
                    '((0 0 2)
                      (3 2 2)
@@ -62,7 +62,7 @@
 (ert-deftest difflib-test-get-opcodes-example ()
   (let* ((a "qabxcd")
          (b "abycdf")
-         (s (difflib-sequence-matcher :a a :b b))
+         (s (difflib-sequence-matcher "sequence-matcher" :a a :b b))
          (opcodes (difflib-get-opcodes s)))
     (should
      (equal
@@ -93,7 +93,7 @@
     ;;           "28" "29" "30" "31" "32" "33" "34" "35y" "36" "37" "38" "39" )))
     (should
      (equal
-      (difflib-get-grouped-opcodes (difflib-sequence-matcher :a a :b b))
+      (difflib-get-grouped-opcodes (difflib-sequence-matcher "sequence-matcher" :a a :b b))
 
       '((("equal" 5 8 5 8) ("insert" 8 8 8 9) ("equal" 8 11 9 12))
         (("equal" 16 19 17 20)
@@ -126,7 +126,7 @@
 
 
 (ert-deftest difflib-test-one-insert ()
-  (let ((sm (difflib-sequence-matcher :a (make-string 100 ?b)
+  (let ((sm (difflib-sequence-matcher "sequence-matcher" :a (make-string 100 ?b)
                                       :b (concat "a"
                                                  (make-string 100 ?b)))))
     (should (equal (string-to-number (format "%.3f" (difflib-ratio sm)))
@@ -135,7 +135,7 @@
                    '(("insert" 0 0 0 1)
                      ("equal" 0 100 1 101))))
     (should (equal (oref sm :bpopular) nil)))
-  (let ((sm (difflib-sequence-matcher :a (make-string 100 ?b)
+  (let ((sm (difflib-sequence-matcher "sequence-matcher" :a (make-string 100 ?b)
                                       :b (concat (make-string 50 ?b)
                                                  "a"
                                                  (make-string 50 ?b)))))
@@ -148,9 +148,9 @@
     (should (equal (oref sm :bpopular) nil))))
 
 (ert-deftest difflib-test-one-delete ()
-  (let ((sm (difflib-sequence-matcher :a (concat (make-string 40 ?a)
-                                                 "c"
-                                                 (make-string 40 ?b))
+  (let ((sm (difflib-sequence-matcher "sequence-matcher" :a (concat (make-string 40 ?a)
+                                                                    "c"
+                                                                    (make-string 40 ?b))
                                       :b (concat (make-string 40 ?a)
                                                  (make-string 40 ?b)))))
     (should (equal (string-to-number (format "%.3f" (difflib-ratio sm)))
@@ -161,37 +161,37 @@
                      ("equal" 41 81 40 80))))))
 
 (ert-deftest difflib-test-bjunk ()
-  (let ((sm (difflib-sequence-matcher
-             :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
-                                              " "
-                                            ?\s)))
-             :a (concat (make-string 40 ?a)
-                        (make-string 40 ?b))
-             :b (concat (make-string 44 ?a)
-                        (make-string 40 ?b)))))
+  (let ((sm (difflib-sequence-matcher "sequence-matcher"
+                                      :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
+                                                                       " "
+                                                                     ?\s)))
+                                      :a (concat (make-string 40 ?a)
+                                                 (make-string 40 ?b))
+                                      :b (concat (make-string 44 ?a)
+                                                 (make-string 40 ?b)))))
     (should (equal (oref sm :bjunk) nil)))
-  (let ((sm (difflib-sequence-matcher
-             :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
-                                              " "
-                                            ?\s)))
-             :a (concat (make-string 40 ?a)
-                        (make-string 40 ?b))
-             :b (concat (make-string 44 ?a)
-                        (make-string 40 ?b)
-                        (make-string 20 ?\s)))))
+  (let ((sm (difflib-sequence-matcher "sequence-matcher"
+                                      :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
+                                                                       " "
+                                                                     ?\s)))
+                                      :a (concat (make-string 40 ?a)
+                                                 (make-string 40 ?b))
+                                      :b (concat (make-string 44 ?a)
+                                                 (make-string 40 ?b)
+                                                 (make-string 20 ?\s)))))
     (should (equal (oref sm :bjunk) (if difflib-pythonic-strings
                                         '(" ")
                                       '(?\s)))))
-  (let ((sm (difflib-sequence-matcher
-             :isjunk (lambda (x) (member x
-                                         (if difflib-pythonic-strings
-                                             '(" " "b")
-                                           '(?\s ?b))))
-             :a (concat (make-string 40 ?a)
-                        (make-string 40 ?b))
-             :b (concat (make-string 44 ?a)
-                        (make-string 40 ?b)
-                        (make-string 20 ?\s)))))
+  (let ((sm (difflib-sequence-matcher "sequence-matcher"
+                                      :isjunk (lambda (x) (member x
+                                                                  (if difflib-pythonic-strings
+                                                                      '(" " "b")
+                                                                    '(?\s ?b))))
+                                      :a (concat (make-string 40 ?a)
+                                                 (make-string 40 ?b))
+                                      :b (concat (make-string 44 ?a)
+                                                 (make-string 40 ?b)
+                                                 (make-string 20 ?\s)))))
     (should (equal (oref sm :bjunk) (if difflib-pythonic-strings
                                         '("b" " ")
                                       '(?b ?\s))))))
@@ -199,20 +199,20 @@
 (ert-deftest difflib-test-autojunk ()
   (let ((seq1 (make-string 200 ?b))
         (seq2 (concat "a" (make-string 200 ?b))))
-    (let ((sm (difflib-sequence-matcher :a seq1 :b seq2)))
+    (let ((sm (difflib-sequence-matcher "sequence-matcher" :a seq1 :b seq2)))
       (should (cl-equalp (string-to-number (format "%.3f" (difflib-ratio sm)))
                          0))
       (should (equal (oref sm :bpopular) (if difflib-pythonic-strings
                                              '("b")
                                            '(?b)))))
     ;; Junk off
-    (let ((sm (difflib-sequence-matcher :a seq1 :b seq2 :autojunk nil)))
+    (let ((sm (difflib-sequence-matcher "sequence-matcher" :a seq1 :b seq2 :autojunk nil)))
       (should (cl-equalp (string-to-number (format "%.3f" (difflib-ratio sm)))
                          0.998))
       (should (equal (oref sm :bpopular) nil)))))
 
 (ert-deftest difflib-test-ratio-for-null-seq ()
-  (let ((s (difflib-sequence-matcher :a '() :b '())))
+  (let ((s (difflib-sequence-matcher "sequence-matcher" :a '() :b '())))
     (should (cl-equalp (difflib-ratio s) 1))
     (should (cl-equalp (difflib-quick-ratio s) 1))
     (should (cl-equalp (difflib-real-quick-ratio s) 1))))

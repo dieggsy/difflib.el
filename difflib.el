@@ -485,7 +485,7 @@ list, sorted by similarity score, most similar first."
   (when (not (<= 0.0 cutoff 1.0))
     (error "CUTOFF must be in [0.0, 1.0]: %S" cutoff))
   (let (result
-        (s (difflib-sequence-matcher)))
+        (s (difflib-sequence-matcher "sequence-matcher")))
     (difflib-set-seq2 s word)
     (cl-loop for x being the elements of possibilities
              do (difflib-set-seq1 s x)
