@@ -7,7 +7,7 @@
 ;; Created: 2017-10-28
 ;; Version: 0.1.0
 ;; Keywords: matching tools string
-;; Package-Requires: ((emacs "24") (cl-generic "0.3"))
+;; Package-Requires: ((emacs "24.4") (cl-generic "0.3") (ht "2.2"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -38,7 +38,7 @@
   "Treat chars in strings as single-char-length strings.")
 
 (defun difflib--calculate-ratio (matches length)
-  "When (> LENGTH 0), return (* 2.0 (/ (float MATCHES) LENGTH))."
+  "Return (* 2.0 (/ (float MATCHES) LENGTH)) when (> LENGTH 0),"
   (if (> length 0)
       (* 2.0 (/ (float matches) length))
     1.0))
