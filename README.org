@@ -12,8 +12,8 @@ and the ~get_close_matches~ function, since in my opinion those are the most
 useful for elisp, and I wanted to use them for another project. (See todo table
 below).
 
-** Todo [1/4]
+** Todo [2/4]
  - [X] Port SequenceMatcher
- - [ ] Use hash tables instead of alists?
+ - [X] Use hash tables instead of alists?
  - [ ] Port Differ
  - [ ] Port HtmlDiff
