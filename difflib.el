@@ -171,8 +171,8 @@ See also `difflib-set-seqs' and `difflib-set-seq1'.
      as i = 0 then (1+ i)
      do (cl-symbol-macrolet ((exists (gethash elt b2j)))
           (when (not exists)
-            (setf exists nil))
-          (setf exists (append exists (list i)))))
+            (setq exists nil))
+          (setq exists (append exists (list i)))))
     (when isjunk
       (cl-loop
        for elt in (ht-keys b2j)
@@ -359,7 +359,7 @@ The tags are strings, with these meanings:
                       j (+ bj size))
                 (when (/= size 0)
                   (push (list "equal" ai i bj j) answer)))))
-      (setf answer (reverse answer)))))
+      (setq answer (reverse answer)))))
 
 (cl-defmethod difflib-get-grouped-opcodes ((matcher difflib-sequence-matcher) &key (n 3))
   "Isolate change clusters by eliminating ranges with no changes.
