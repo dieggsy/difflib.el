@@ -436,7 +436,7 @@ upper bound."
 This isn't defined beyond that it is an upper bound on `difflib-ratio', and is
 faster to compute."
   (with-slots (fullbcount b a) matcher
-    (when (zerop (hash-table-count fullbcount))
+    (when (ht-empty? fullbcount)
       (cl-loop for elt being the elements of b
                do (setf (gethash elt fullbcount)
                         (1+ (gethash elt fullbcount 0)))))
