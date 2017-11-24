@@ -679,7 +679,7 @@ PAT matches blank lines by default."
 
 WS is \" \\t\" by default."
   (let ((ws (if ws ws " \t")))
-    (s-contains? ch ws)))
+    (s-contains? (char-to-string ch) ws)))
 
 (defun difflib--format-range-unified (start stop)
   "Convert range to the \"ed\" format."
