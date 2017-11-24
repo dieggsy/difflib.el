@@ -408,7 +408,7 @@ Each group is in the same format as returned by `difflib-get-opcodes'."
               (setq i1 (max i1 (- i2 n))
                     j1 (max j1 (- j2 n))))
             (push (list tag i1 i2 j1 j2) group)))
-      (when (and group (not (= (length group) 1)) (string= (caar group) "equal"))
+      (when (and group (not (and (= (length group) 1) (string= (caar group) "equal"))))
         (push (reverse group) groups))
       (reverse groups))))
 
