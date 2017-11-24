@@ -3,9 +3,3 @@
 [[https://coveralls.io/github/dieggsy/difflib.el?branch=master][file:https://coveralls.io/repos/github/dieggsy/difflib.el/badge.svg?branch=master]]
 
 This is a port of [[https://github.com/python/cpython/blob/c62f0cb3b1f6f9ca4ce463b1c99b0543bdfa38d6/Lib/difflib.py][python's difflib]] to emacs-lisp.
-
-** Todo [2/4]
- - [X] Port SequenceMatcher
- - [X] Use hash tables instead of alists?
- - [ ] Port Differ
- - [ ] Port HtmlDiff
