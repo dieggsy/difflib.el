@@ -231,7 +231,7 @@ junk happens to be adjacent to an \"interesting\" match."
                     ((>= j bhi)
                      (cl-return-from inner))
                     (t (let ((k (1+ (gethash (1- j) j2len 0))))
-                         (setf (gethash j newj2len) k)
+                         (puthash j k newj2len)
                          (if (> k bestsize)
                              (setq besti (1+ (- i k))
                                    bestj (1+ (- j k))
@@ -439,8 +439,7 @@ faster to compute."
   (with-slots (fullbcount b a) matcher
     (when (ht-empty? fullbcount)
       (cl-loop for elt being the elements of b
-               do (setf (gethash elt fullbcount)
-                        (1+ (gethash elt fullbcount 0)))))
+               do  (puthash elt (1+ (gethash elt fullbcount 0)) fullbcount)))
     (let ((avail (make-hash-table :test #'equal))
           numb
           (matches 0))
@@ -449,7 +448,7 @@ faster to compute."
                     (if availhas
                         (setq numb availhas)
                       (setq numb (gethash elt fullbcount 0)))
-                    (setf (gethash elt avail) (1- numb))
+                    (puthash elt (1- numb) avail)
                     (when (> numb 0)
                       (setq matches (1+ matches)))))
       (difflib--calculate-ratio matches (+ (length a)
@@ -701,10 +700,27 @@ WS is \" \\t\" by default."
                                 (tofiledate "")
                                 (n 3)
                                 (lineterm "\n"))
-  ;;  This is annoying, but emacs<24 requires it apparently.
+  "Compare two sequences of lines; generate the delta as a unified diff.
+
+Unified diffs are a compact way of showing line changes and a few
+lines of context. The number of context lines is set by N which
+defaults to three.
+
+By default, the diff control lines (those with ---, +++, or @@)
+are created with a trailing newline.
+
+For inputs that do not have trailing newlines, set LINETERM to ""
+so that the output will be uniformly newline free.
+
+The unidiff format normally has a header for filenames and
+modification times. Any or all of these may be specified using
+strings for FROMFILE, TOFILE, FROMFILEDATE, and TOFILEDATE. The
+modification times are normally expressed in the ISO 8601
+format."
   (difflib--check-types a b fromfile tofile fromfiledate tofiledate lineterm)
-  (let ((started nil)
+  (let (started
         fromdate
+        todate
         result)
     (cl-loop for group in (difflib-get-grouped-opcodes
                            (difflib-sequence-matcher "sequence-matcher" :a a :b b)
@@ -716,8 +732,8 @@ WS is \" \\t\" by default."
              do (progn
                   (when (not started)
                     (setq started t)
-                    (setq fromdate (if fromfiledate (format "\t%s" fromfiledate) ""))
-                    (setq todate (if tofiledate (format "\t%s" tofiledate) ""))
+                    (setq fromdate (if (s-present? fromfiledate) (format "\t%s" fromfiledate) ""))
+                    (setq todate (if (s-present? tofiledate) (format "\t%s" tofiledate) ""))
                     (push (format "--- %s%s%s" fromfile fromdate lineterm) result)
                     (push (format "+++ %s%s%s" tofile todate lineterm) result))
                   (push (format "@@ -%s +%s @@%s" file1-range file2-range lineterm) result)
