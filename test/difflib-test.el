@@ -3,11 +3,13 @@
 
 (require 'cl-lib)
 (require 'difflib)
+(require 's)
 (require 'ert)
 
 (ert-deftest difflib-test-sequence-matcher-example ()
   ;; SequenceMatcher docstring
-  (let ((s (difflib-sequence-matcher "sequence-matcher"
+  (let ((s (difflib-sequence-matcher
+            "sequence-matcher"
             :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
                                              " "
                                            ?\s)))
@@ -40,7 +42,8 @@
   (let ((s (difflib-sequence-matcher "sequence-matcher" :a " abcd" :b "abcd abcd")))
     (should (equal (difflib-find-longest-match s 0 5 0 9)
                    '(0 4 5))))
-  (let ((s (difflib-sequence-matcher "sequence-matcher"
+  (let ((s (difflib-sequence-matcher
+            "sequence-matcher"
             :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
                                              " "
                                            ?\s)))
@@ -196,7 +199,7 @@
                                         '("b" " ")
                                       '(?b ?\s))))))
 
-(ert-deftest difflib-test-autojunk ()
+(ert-deftest difflib-test-one-insert-homogeneous-sequence ()
   (let ((seq1 (make-string 200 ?b))
         (seq2 (concat "a" (make-string 200 ?b))))
     (let ((sm (difflib-sequence-matcher "sequence-matcher" :a seq1 :b seq2)))
@@ -216,3 +219,78 @@
     (should (cl-equalp (difflib-ratio s) 1))
     (should (cl-equalp (difflib-quick-ratio s) 1))
     (should (cl-equalp (difflib-real-quick-ratio s) 1))))
+
+(ert-deftest difflib-test-qformat-example ()
+  (should
+   (equal (difflib--qformat (difflib-differ "differ")
+                            "\tabcDefghiJkl\n"
+                            "\tabcdefGhijkl\n"
+                            "  ^ ^  ^      "
+                            "  ^ ^  ^      ")
+          '("- \tabcDefghiJkl\n"
+            "? \t ^ ^  ^\n"
+            "+ \tabcdefGhijkl\n"
+            "? \t ^ ^  ^\n"))))
+
+(ert-deftest difflib-test-fancy-replace-example ()
+  (should
+   (equal (difflib--fancy-replace (difflib-differ "differ")
+                                  '("abcDefghiJkl\n")
+                                  0
+                                  1
+                                  '("abcdefGhijkl\n")
+                                  0
+                                  1)
+          '("- abcDefghiJkl\n"
+            "?    ^  ^  ^\n"
+            "+ abcdefGhijkl\n"
+            "?    ^  ^  ^\n"))))
+
+(ert-deftest difflib-test-compare-example ()
+  (should
+   (equal (difflib-compare (difflib-differ "differ")
+                           '("one\n" "two\n" "three\n")
+                           '("ore\n" "tree\n" "emu\n"))
+          '("- one\n"
+            "?  ^\n"
+            "+ ore\n"
+            "?  ^\n"
+            "- two\n"
+            "- three\n"
+            "?  -\n"
+            "+ tree\n"
+            "+ emu\n"))))
+
+(ert-deftest difflib-test-unified-diff-example ()
+  (should
+   (equal (difflib-unified-diff (s-split " " "one two three four")
+                                (s-split " " "zero one tree four")
+                                :fromfile "Original"
+                                :tofile "Current"
+                                :fromfiledate "2005-01-26 23:30:50"
+                                :tofiledate "2010-04-02 10:20:52"
+                                :lineterm "")
+          '("--- Original\t2005-01-26 23:30:50"
+            "+++ Current\t2010-04-02 10:20:52"
+            "@@ -1,4 +1,4 @@"
+            "+zero"
+            " one"
+            "-two"
+            "-three"
+            "+tree"
+            " four"))))
+
+(ert-deftest difflib-test-matching-blocks-cache ()
+  (let* ((s (difflib-sequence-matcher "sequence-matcher" :a "abxcd" :b "abcd"))
+         (first (difflib-get-matching-blocks s))
+         (second (difflib-get-matching-blocks s)))
+    (should (equal (car (last (elt second 0))) 2))
+    (should (equal (car (last (elt second 1))) 2))
+    (should (equal (car (last (elt second 2))) 0))))
+
+(ert-deftest difflib-test-added-tab-hint ()
+  (let ((diff (difflib-compare (difflib-differ "differ") '("\tI am a buggy") '("\t\tI am a bug"))))
+    (should (equal (elt diff 0) "- \tI am a buggy"))
+    (should (equal (elt diff 1) "?            --\n"))
+    (should (equal (elt diff 2) "+ \t\tI am a bug"))
+    (should (equal (elt diff 3) "? +\n"))))

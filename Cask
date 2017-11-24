@@ -10,4 +10,5 @@
  (depends-on "cl-generic")
  (depends-on "undercover")
  (depends-on "ht")
+ (depends-on "s")
  (depends-on "eieio"))
