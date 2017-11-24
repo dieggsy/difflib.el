@@ -841,6 +841,23 @@ If not specified, the strings default to blanks."
     (when not-str-arg
       (error "All arguments must be str, not %s" (type-of arg)))))
 
+(cl-defun difflib-ndiff (a b &key linejunk (charjunk #'difflib-is-character-junk-p))
+  "Compare A and B (lists of strings); return a `difflib-differ`-style delta.
+
+The two optional keyword parameters are for filter functions:
+
+- linejunk: see `difflib-is-line-junk-p'. It is recommended to
+  leave linejunk nil; the underlying `difflib-sequence-matcher'
+  class has an adaptive notion of \"noise\" lines that's better
+  than any static definition the author has ever been able to
+  craft.
+
+- charjunk: see `difflib-is-character-junk-p'."
+  (difflib-compare
+   (difflib-differ "differ" :linejunk linejunk :charjunk charjunk)
+   a
+   b))
+
 (provide 'difflib)
 
 ;;; difflib.el ends here

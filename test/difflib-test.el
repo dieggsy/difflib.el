@@ -363,3 +363,17 @@
   (should (equal (difflib--format-range-context 3 5) "4,5"))
   (should (equal (difflib--format-range-context 3 6) "4,6"))
   (should (equal (difflib--format-range-context 0 0) "0")))
+
+(ert-deftest difflib-test-ndiff-example ()
+  (should
+   (equal (difflib-ndiff '("one\n" "two\n" "three\n")
+                         '("ore\n" "tree\n" "emu\n"))
+          '("- one\n"
+            "?  ^\n"
+            "+ ore\n"
+            "?  ^\n"
+            "- two\n"
+            "- three\n"
+            "?  -\n"
+            "+ tree\n"
+            "+ emu\n"))))
