@@ -751,6 +751,85 @@ format."
                                            do (push (concat "+" line) result)))))))
     (reverse result)))
 
+(defun difflib--format-range-context (start stop)
+  "Cornvert range to the \"ed\" format."
+  (let ((beginning (1+ start))
+        (length (- stop start)))
+    (when (= length 0)
+      (setq beginning (1- beginning)))
+    (if (<= length 1)
+        (format "%s" beginning)
+      (format "%s,%s" beginning (1- (+ beginning length))))))
+
+(cl-defun difflib-context-diff (a
+                                b
+                                &key
+                                (fromfile "")
+                                (tofile "")
+                                (fromfiledate "")
+                                (tofiledate "")
+                                (n 3)
+                                (lineterm "\n"))
+  "Compare two sequences of lines; generate the delta as a context diff.
+
+Context diffs are a compact way of showing line changes and a few
+lines of context. The number of context lines is set by N which
+defaults to three.
+
+By default, the diff control lines (those with *** or ---) are
+created with a trailing newline.
+
+For inputs that do not have trailing newlines, set LINETERM to ""
+so that the output will be uniformly newline free.
+
+
+The context diff format normally has a header for filenames and
+modification times. Any or all of these may be specified using
+strings for FROMFILE, TOFILE, FROMFILEDATE, and TOFILEDATE. The
+modification times are normally expressed in the ISO 8601 format.
+If not specified, the strings default to blanks."
+  (difflib--check-types a b fromfile tofile fromfiledate tofiledate lineterm)
+  (let ((prefix
+         (ht ("insert" "+ ") ("delete" "- ") ("replace" "! ") ("equal" "  ")))
+        started
+        fromdate
+        todate
+        result)
+    (cl-loop for group in (difflib-get-grouped-opcodes
+                           (difflib-sequence-matcher "sequence-matcher" :a a :b b)
+                           :n n)
+             as first = (elt group 0)
+             as last = (elt group (1- (length group)))
+             as file1-range = (difflib--format-range-context (elt first 1) (elt last 2))
+             as file2-range = (difflib--format-range-context (elt first 3) (elt last 4))
+             do (progn
+                  (when (not started)
+                    (setq started t)
+                    (setq fromdate (if (s-present? fromfiledate) (format "\t%s" fromfiledate) ""))
+                    (setq todate (if (s-present? tofiledate) (format "\t%s" tofiledate) ""))
+                    (push (format "*** %s%s%s" fromfile fromdate lineterm) result)
+                    (push (format "--- %s%s%s" tofile todate lineterm) result))
+                  (push (concat "***************" lineterm) result)
+                  (push (format "*** %s ****%s" file1-range lineterm) result)
+                  (when (cl-find-if (lambda (lst)
+                                      (member (car lst) '("replace" "delete")))
+                                    group)
+                    (cl-loop
+                     for (tag i1 i2 _ _) in group
+                     do (when (not (string= tag "insert"))
+                          (cl-loop for line in (cl-subseq a i1 i2)
+                                   do (push (concat (gethash tag prefix) line) result)))))
+                  (push (format "--- %s ----%s" file2-range lineterm) result)
+                  (when (cl-find-if (lambda (lst)
+                                      (member (car lst) '("replace" "insert")))
+                                    group)
+                    (cl-loop
+                     for (tag _ _ j1 j2) in group
+                     do (when (not (string= tag "delete"))
+                          (cl-loop for line in (cl-subseq b j1 j2)
+                                   do (push (concat (gethash tag prefix) line) result)))))))
+    (reverse result)))
+
 (defun difflib--check-types (a b &rest args)
   (when (and a (not (stringp (elt a 0))))
     (error "Lines to compare must be string, not %s" (type-of (elt a 0))))

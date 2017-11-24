@@ -294,3 +294,72 @@
     (should (equal (elt diff 1) "?            --\n"))
     (should (equal (elt diff 2) "+ \t\tI am a bug"))
     (should (equal (elt diff 3) "? +\n"))))
+
+(ert-deftest difflib-test-context-diff-example ()
+  (should
+   (equal (difflib-context-diff (s-split " " "one two three four")
+                                (s-split " " "zero one tree four")
+                                :fromfile "Original"
+                                :tofile "Current"
+                                :lineterm "")
+          '("*** Original"
+            "--- Current"
+            "***************"
+            "*** 1,4 ****"
+            "  one"
+            "! two"
+            "! three"
+            "  four"
+            "--- 1,4 ----"
+            "+ zero"
+            "  one"
+            "! tree"
+            "  four"))))
+
+(ert-deftest difflib-test-tab-delimiter ()
+  (let* ((args '(("one")
+                 ("two")
+                 :fromfile "Original"
+                 :tofile "Current"
+                 :fromfiledate "2005-01-26 23:30:50"
+                 :tofiledate "2010-04-02 10:20:52"
+                 :lineterm ""))
+         (ud (apply #'difflib-unified-diff args))
+         (cd (apply #'difflib-context-diff args)))
+    (should
+     (equal (cl-subseq ud 0 2)
+            '("--- Original\t2005-01-26 23:30:50"
+              "+++ Current\t2010-04-02 10:20:52")))
+    (should
+     (equal (cl-subseq cd 0 2)
+            '("*** Original\t2005-01-26 23:30:50"
+              "--- Current\t2010-04-02 10:20:52")))))
+
+(ert-deftest difflib-test-no-trailing-tab-on-empty-filedate ()
+  (let* ((args '(("one")
+                 ("two")
+                 :fromfile "Original"
+                 :tofile "Current"
+                 :lineterm ""))
+         (ud (apply #'difflib-unified-diff args))
+         (cd (apply #'difflib-context-diff args)))
+    (should
+     (equal (cl-subseq ud 0 2)
+            '("--- Original" "+++ Current")))
+    (should
+     (equal (cl-subseq cd 0 2)
+            '("*** Original" "--- Current")))))
+
+(ert-deftest difflib-test-range-format-unified ()
+  (should (equal (difflib--format-range-unified 3 3) "3,0"))
+  (should (equal (difflib--format-range-unified 3 4) "4"))
+  (should (equal (difflib--format-range-unified 3 5) "4,2"))
+  (should (equal (difflib--format-range-unified 3 6) "4,3"))
+  (should (equal (difflib--format-range-unified 0 0) "0,0")))
+
+(ert-deftest difflib-test-range-format-context ()
+  (should (equal (difflib--format-range-context 3 3) "3"))
+  (should (equal (difflib--format-range-context 3 4) "4"))
+  (should (equal (difflib--format-range-context 3 5) "4,5"))
+  (should (equal (difflib--format-range-context 3 6) "4,6"))
+  (should (equal (difflib--format-range-context 0 0) "0")))
