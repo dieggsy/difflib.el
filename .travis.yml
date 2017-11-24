@@ -12,7 +12,7 @@ addons:
     packages:
       - gnutls-bin
 before_install:
-  - curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
+  - travis_retry curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
   - evm install $EVM_EMACS --use --skip
   - cask
   # temporary fix for the ert+duration reporter, when compiled gives
