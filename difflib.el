@@ -36,7 +36,9 @@
 (require 's)
 
 (defvar difflib-pythonic-strings nil
-  "Treat chars in strings as single-char-length strings.")
+  "Treat chars in strings as single-char-length strings.
+
+Can be useful for debugging.")
 
 (defun difflib--calculate-ratio (matches length)
   "Return (* 2.0 (/ (float MATCHES) LENGTH)) when (> LENGTH 0),"
