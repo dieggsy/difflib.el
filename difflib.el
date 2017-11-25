@@ -41,7 +41,7 @@
 Can be useful for debugging.")
 
 (defun difflib--calculate-ratio (matches length)
-  "Return (* 2.0 (/ (float MATCHES) LENGTH)) when (> LENGTH 0),"
+  "Return (* 2.0 (/ (float MATCHES) LENGTH)) when (> LENGTH 0)."
   (if (> length 0)
       (* 2.0 (/ (float matches) length))
     1.0))
@@ -506,6 +506,7 @@ list, sorted by similarity score, most similar first."
     (mapcar (lambda (lst) (car lst)) result)))
 
 (defun difflib--count-leading (line ch)
+  "Count number of leading CH in LINE."
   (let ((i 0)
         (n (length line)))
     (while (and (< i n) (equal (elt line i) ch))
@@ -671,21 +672,21 @@ on the similar pair. Lots of work, but often worth it."
     (reverse result)))
 
 (defun difflib-is-line-junk-p (line &optional pat)
-  "Return true if LINE matches PAT.
+  "Return non-nil if LINE matches PAT.
 
 PAT matches blank lines by default."
   (let ((pat (if pat pat "\s*$")))
     (string-match-p pat line)))
 
 (defun difflib-is-character-junk-p (ch &optional ws)
-  "Return true if WS contains CH.
+  "Return t if WS contains CH.
 
 WS is \" \\t\" by default."
   (let ((ws (if ws ws " \t")))
     (s-contains? (char-to-string ch) ws)))
 
 (defun difflib--format-range-unified (start stop)
-  "Convert range to the \"ed\" format."
+  "Convert range specified by START and STOP to the \"ed\" format."
   (let ((beginning (1+ start))
         (length (- stop start)))
     (if (= length 1)
@@ -756,7 +757,7 @@ format."
     (reverse result)))
 
 (defun difflib--format-range-context (start stop)
-  "Cornvert range to the \"ed\" format."
+  "Cornvert range specified by START and STOP to the \"ed\" format."
   (let ((beginning (1+ start))
         (length (- stop start)))
     (when (= length 0)
@@ -836,6 +837,7 @@ If not specified, the strings default to blanks."
     (reverse result)))
 
 (defun difflib--check-types (a b &rest args)
+  "Ensure that A, B, and ARGS are all strings."
   (when (and a (not (stringp (elt a 0))))
     (error "Lines to compare must be string, not %s" (type-of (elt a 0))))
   (when (and b (not (stringp (elt b 0))))
