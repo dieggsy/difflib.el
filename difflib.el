@@ -116,6 +116,16 @@ characters within similar (near-matching) lines.
 See also function `difflib-get-close-matches' in this module, which shows how
 simple code building on SequenceMatcher can be used to do useful work.")
 
+(defmacro difflib--make-matcher (&rest args)
+  "Create a `difflib-sequence-matcher' according to Emacs version.
+
+This is for compatibility since emacs>24 deprecated passing a
+name to a class constructor, but emacs<25 has no notion of
+`eieio-named'."
+  (if (version< emacs-version "25")
+      `(difflib-sequence-matcher "sequence-matcher" ,@args)
+    `(difflib-sequence-matcher ,@args)))
+
 (cl-defmethod initialize-instance :after ((matcher difflib-sequence-matcher) &rest _args)
   "Construct a difflib-sequence-matcher."
   (difflib-set-seqs matcher (eieio-oref matcher 'a) (eieio-oref matcher 'b)))
@@ -488,7 +498,7 @@ list, sorted by similarity score, most similar first."
   (when (not (<= 0.0 cutoff 1.0))
     (error "CUTOFF must be in [0.0, 1.0]: %S" cutoff))
   (let (result
-        (s (difflib-sequence-matcher "sequence-matcher")))
+        (s (difflib--make-matcher)))
     (difflib-set-seq2 s word)
     (cl-loop for x being the elements of possibilities
              do (difflib-set-seq1 s x)
@@ -535,13 +545,23 @@ The two optional keyword parameters are for filter functions:
 
 - charjunk: see `difflib-is-character-junk-p'.")
 
+(defmacro difflib--make-differ (&rest args)
+  "Create a `difflib-differ' according to Emacs version.
+
+This is for compatibility since emacs>24 deprecated passing a
+name to a class constructor, but emacs<25 has no notion of
+`eieio-named'."
+  (if (version< emacs-version "25")
+      `(difflib-differ "differ" ,@args)
+    `(difflib-differ ,@args)))
+
 (cl-defmethod difflib-compare ((differ difflib-differ) a b)
   "Compare two sequences of lines; generate the resulting delta.
 
 Each sequence must contain individual single-line strings ending
 with newlines. The delta generated also consists of newline-
 terminated strings."
-  (let ((cruncher (difflib-sequence-matcher "sequence-matcher" :isjunk (eieio-oref differ 'linejunk) :a a :b b))
+  (let ((cruncher (difflib--make-matcher :isjunk (eieio-oref differ 'linejunk) :a a :b b))
         g)
     (cl-loop for (tag alo ahi blo bhi) in (difflib-get-opcodes cruncher)
              do (pcase tag
@@ -578,7 +598,7 @@ on the similar pair. Lots of work, but often worth it."
   (cl-block fn
     (let ((best-ratio 0.74)
           (cutoff 0.75)
-          (cruncher (difflib-sequence-matcher "sequence-matcher" :isjunk (eieio-oref differ 'charjunk)))
+          (cruncher (difflib--make-matcher :isjunk (eieio-oref differ 'charjunk)))
           eqi
           eqj
           (inner-range (number-sequence alo (1- ahi)))
@@ -643,6 +663,7 @@ on the similar pair. Lots of work, but often worth it."
       (setq result (append result (difflib--fancy-helper differ a (1+ best-i) ahi b (1+ best-j) bhi))))))
 
 (cl-defmethod difflib--fancy-helper ((differ difflib-differ) a alo ahi b blo bhi)
+  "Helper function for `difflib--fancy-replace'."
   (let (g)
     (cond ((< alo ahi)
            (if (< blo bhi)
@@ -728,7 +749,7 @@ format."
         todate
         result)
     (cl-loop for group in (difflib-get-grouped-opcodes
-                           (difflib-sequence-matcher "sequence-matcher" :a a :b b)
+                           (difflib--make-matcher :a a :b b)
                            :n n)
              as first = (elt group 0)
              as last = (elt group (1- (length group)))
@@ -802,7 +823,7 @@ If not specified, the strings default to blanks."
         todate
         result)
     (cl-loop for group in (difflib-get-grouped-opcodes
-                           (difflib-sequence-matcher "sequence-matcher" :a a :b b)
+                           (difflib--make-matcher :a a :b b)
                            :n n)
              as first = (elt group 0)
              as last = (elt group (1- (length group)))
@@ -862,7 +883,7 @@ The two optional keyword parameters are for filter functions:
 
 - charjunk: see `difflib-is-character-junk-p'."
   (difflib-compare
-   (difflib-differ "differ" :linejunk linejunk :charjunk charjunk)
+   (difflib--make-differ :linejunk linejunk :charjunk charjunk)
    a
    b))
 
