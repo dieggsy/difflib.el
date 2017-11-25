@@ -510,6 +510,7 @@ list, sorted by similarity score, most similar first."
       (setq i (1+ i)))
     i))
 
+;;;###autoload
 (defclass difflib-differ ()
   ((linejunk :initarg :linejunk
              :initform nil
@@ -691,6 +692,7 @@ WS is \" \\t\" by default."
         (setq beginning (1- beginning)))
       (format "%s,%s" beginning length))))
 
+;;;###autoload
 (cl-defun difflib-unified-diff (a
                                 b
                                 &key
@@ -761,6 +763,7 @@ format."
         (format "%s" beginning)
       (format "%s,%s" beginning (1- (+ beginning length))))))
 
+;;;###autoload
 (cl-defun difflib-context-diff (a
                                 b
                                 &key
@@ -841,6 +844,7 @@ If not specified, the strings default to blanks."
     (when not-str-arg
       (error "All arguments must be str, not %s" (type-of arg)))))
 
+;;;###autoload
 (cl-defun difflib-ndiff (a b &key linejunk (charjunk #'difflib-is-character-junk-p))
   "Compare A and B (lists of strings); return a `difflib-differ`-style delta.
 
