@@ -6,6 +6,15 @@ This is a port of [[https://github.com/python/cpython/blob/c62f0cb3b1f6f9ca4ce46
 computing "human friendly" diffs, which use the notion of the longest
 contiguous and junk-free matching subsequence.
 
+** Installation
+This package isn't on melpa yet. Consider installing with [[https://github.com/raxod502/straight.el][straight.el]] or
+[[https://github.com/quelpa/quelpa-use-package][quelpa-use-package]].
+
+Otherwise, download the files to somewhere in your load path, and require
+difflib:
+#+begin_src emacs-lisp
+(require 'difflib)
+#+end_src
 ** Functions
 *** difflib-get-close-matches ~(word possibilities (:n 3) (:cutoff 0.6))~
 Use ~difflib-sequence-matcher~ to return a list of the best "good enough"
