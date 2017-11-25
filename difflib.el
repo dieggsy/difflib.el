@@ -864,6 +864,21 @@ The two optional keyword parameters are for filter functions:
    a
    b))
 
+(defun difflib-restore (delta which)
+  "Generate one of the two sequences that generated a delta.
+
+Given a DELTA produced by `difflib-compare' or `difflib-ndiff', extract
+lines originating from file 1 or 2 (parameter WHICH), stripping off line
+prefixes."
+  (cl-assert (member which '(1 2)))
+  (let* ((tag (elt '("- " "+ ") (1- which)))
+         (prefixes (list "  " tag))
+         result)
+    (cl-loop for line in delta
+             if (member (cl-subseq line 0 2) prefixes)
+             do (push (cl-subseq line 2) result))
+    (reverse result)))
+
 (provide 'difflib)
 
 ;;; difflib.el ends here

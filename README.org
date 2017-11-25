@@ -39,7 +39,7 @@ For two lists of strings, return a delta in context diff format.
 ;;   "! tree"
 ;;   "  four")
 #+end_src
-*** ndiff ~(a b &key linejunk (charjunk #'difflib-is-character-junk-p))~
+*** difflib-ndiff ~(a b &key linejunk (charjunk #'difflib-is-character-junk-p))~
 Return a delta: the difference between ~a~ and ~b~ (lists of strings).
 #+begin_src emacs-lisp
 (difflib-ndiff '("one\n" "two\n" "three\n")
@@ -76,6 +76,8 @@ Return a delta: the difference between ~a~ and ~b~ (lists of strings).
 ;;   "+tree"
 ;;   " four")
 #+end_src
+*** difflib-restore ~(delta which)~
+Return one of the two sequences that generated a ~difflib-ndiff~ delta.
 ** Classes
 *** difflib-sequence-matcher
 A flexible class for comparing deltas of sequences of any type.

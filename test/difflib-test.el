@@ -377,3 +377,19 @@
             "?  -\n"
             "+ tree\n"
             "+ emu\n"))))
+
+(ert-deftest difflib-test-restore-example ()
+  (should
+   (equal (difflib-restore (difflib-ndiff '("one\n" "two\n" "three\n")
+                                          '("ore\n" "tree\n" "emu\n"))
+                           1)
+          '("one\n"
+            "two\n"
+            "three\n")))
+  (should
+   (equal (difflib-restore (difflib-ndiff '("one\n" "two\n" "three\n")
+                                          '("ore\n" "tree\n" "emu\n"))
+                           2)
+          '("ore\n"
+            "tree\n"
+            "emu\n"))))
