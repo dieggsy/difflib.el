@@ -555,26 +555,33 @@ name to a class constructor, but emacs<25 has no notion of
       `(difflib-differ "differ" ,@args)
     `(difflib-differ ,@args)))
 
-(cl-defmethod difflib-compare ((differ difflib-differ) a b)
+(cl-defmethod difflib-compare ((differ difflib-differ) a b &optional &key newline-terminated)
   "Compare two sequences of lines; generate the resulting delta.
 
-Each sequence must contain individual single-line strings ending
-with newlines. The delta generated also consists of newline-
-terminated strings."
-  (let ((cruncher (difflib--make-matcher :isjunk (eieio-oref differ 'linejunk) :a a :b b))
-        g)
-    (cl-loop for (tag alo ahi blo bhi) in (difflib-get-opcodes cruncher)
-             do (pcase tag
-                  ("replace"
-                   (setq g (difflib--fancy-replace differ a alo ahi b blo bhi)))
-                  ("delete"
-                   (setq g (difflib--dump "-" a alo ahi)))
-                  ("insert"
-                   (setq g (difflib--dump "+" b blo bhi)))
-                  ("equal"
-                   (setq g (difflib--dump " " a alo ahi)))
-                  (_ (error "Unknown tag %s" tag)))
-             append g)))
+If NEWLINE-TERMINATED is t, each sequence must contain individual
+single-line strings ending with newlines. The delta generated
+will then also consist of newline-terminated strings. This is
+consistent with the original python behavior."
+  (unless newline-terminated
+    (setq a (mapcar (lambda (str) (concat str "\n")) a))
+    (setq b (mapcar (lambda (str) (concat str "\n")) b)))
+  (let* ((cruncher (difflib--make-matcher :isjunk (eieio-oref differ 'linejunk) :a a :b b))
+         g
+         (result (cl-loop for (tag alo ahi blo bhi) in (difflib-get-opcodes cruncher)
+                          do (pcase tag
+                               ("replace"
+                                (setq g (difflib--fancy-replace differ a alo ahi b blo bhi)))
+                               ("delete"
+                                (setq g (difflib--dump "-" a alo ahi)))
+                               ("insert"
+                                (setq g (difflib--dump "+" b blo bhi)))
+                               ("equal"
+                                (setq g (difflib--dump " " a alo ahi)))
+                               (_ (error "Unknown tag %s" tag)))
+                          append g)))
+    (if newline-terminated
+        result
+      (mapcar (lambda (str) (s-chop-suffix "\n" str)) result))))
 
 (defun difflib--dump (tag x lo hi)
   (cl-loop for i in (number-sequence lo (1- hi))
@@ -725,7 +732,7 @@ WS is \" \\t\" by default."
                                 (fromfiledate "")
                                 (tofiledate "")
                                 (n 3)
-                                (lineterm "\n"))
+                                (lineterm ""))
   "Compare two sequences of lines; generate the delta as a unified diff.
 
 Unified diffs are a compact way of showing line changes and a few
@@ -796,7 +803,7 @@ format."
                                 (fromfiledate "")
                                 (tofiledate "")
                                 (n 3)
-                                (lineterm "\n"))
+                                (lineterm ""))
   "Compare two sequences of lines; generate the delta as a context diff.
 
 Context diffs are a compact way of showing line changes and a few
@@ -870,7 +877,7 @@ If not specified, the strings default to blanks."
       (error "All arguments must be str, not %s" (type-of not-str-arg)))))
 
 ;;;###autoload
-(cl-defun difflib-ndiff (a b &key linejunk (charjunk #'difflib-is-character-junk-p))
+(cl-defun difflib-ndiff (a b &key linejunk (charjunk #'difflib-is-character-junk-p) newline-terminated)
   "Compare A and B (lists of strings); return a `difflib-differ`-style delta.
 
 The two optional keyword parameters are for filter functions:
@@ -881,11 +888,17 @@ The two optional keyword parameters are for filter functions:
   than any static definition the author has ever been able to
   craft.
 
-- charjunk: see `difflib-is-character-junk-p'."
+- charjunk: see `difflib-is-character-junk-p'.
+
+If NEWLINE-TERMINATED is t, each sequence must contain individual
+single-line strings ending with newlines. The delta generated
+will then also consist of newline-terminated strings. This is
+consistent with the original python behavior."
   (difflib-compare
    (difflib--make-differ :linejunk linejunk :charjunk charjunk)
    a
-   b))
+   b
+   :newline-terminated newline-terminated))
 
 (defun difflib-restore (delta which)
   "Generate one of the two sequences that generated a delta.

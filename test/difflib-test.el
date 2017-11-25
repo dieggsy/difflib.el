@@ -247,7 +247,8 @@
   (should
    (equal (difflib-compare (difflib--make-differ)
                            '("one\n" "two\n" "three\n")
-                           '("ore\n" "tree\n" "emu\n"))
+                           '("ore\n" "tree\n" "emu\n")
+                           :newline-terminated t)
           '("- one\n"
             "?  ^\n"
             "+ ore\n"
@@ -257,6 +258,21 @@
             "?  -\n"
             "+ tree\n"
             "+ emu\n"))))
+
+(ert-deftest difflib-compare-example-no-newlines ()
+  (should
+   (equal (difflib-compare (difflib--make-differ)
+                           '("one" "two" "three")
+                           '("ore" "tree" "emu"))
+          '("- one"
+            "?  ^"
+            "+ ore"
+            "?  ^"
+            "- two"
+            "- three"
+            "?  -"
+            "+ tree"
+            "+ emu"))))
 
 (ert-deftest difflib-test-unified-diff-example ()
   (should
@@ -286,7 +302,10 @@
     (should (equal (car (last (elt second 2))) 0))))
 
 (ert-deftest difflib-test-added-tab-hint ()
-  (let ((diff (difflib-compare (difflib--make-differ) '("\tI am a buggy") '("\t\tI am a bug"))))
+  (let ((diff (difflib-compare (difflib--make-differ)
+                               '("\tI am a buggy")
+                               '("\t\tI am a bug")
+                               :newline-terminated t)))
     (should (equal (elt diff 0) "- \tI am a buggy"))
     (should (equal (elt diff 1) "?            --\n"))
     (should (equal (elt diff 2) "+ \t\tI am a bug"))
@@ -364,7 +383,8 @@
 (ert-deftest difflib-test-ndiff-example ()
   (should
    (equal (difflib-ndiff '("one\n" "two\n" "three\n")
-                         '("ore\n" "tree\n" "emu\n"))
+                         '("ore\n" "tree\n" "emu\n")
+                         :newline-terminated t)
           '("- one\n"
             "?  ^\n"
             "+ ore\n"
@@ -374,6 +394,20 @@
             "?  -\n"
             "+ tree\n"
             "+ emu\n"))))
+
+(ert-deftest difflib-test-ndiff-example-no-newlines ()
+  (should
+   (equal (difflib-ndiff '("one" "two" "three")
+                         '("ore" "tree" "emu"))
+          '("- one"
+            "?  ^"
+            "+ ore"
+            "?  ^"
+            "- two"
+            "- three"
+            "?  -"
+            "+ tree"
+            "+ emu"))))
 
 (ert-deftest difflib-test-restore-example ()
   (should
