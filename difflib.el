@@ -548,26 +548,26 @@ terminated strings."
                   ("replace"
                    (setq g (difflib--fancy-replace differ a alo ahi b blo bhi)))
                   ("delete"
-                   (setq g (difflib--dump differ "-" a alo ahi)))
+                   (setq g (difflib--dump "-" a alo ahi)))
                   ("insert"
-                   (setq g (difflib--dump differ "+" b blo bhi)))
+                   (setq g (difflib--dump "+" b blo bhi)))
                   ("equal"
-                   (setq g (difflib--dump differ " " a alo ahi)))
+                   (setq g (difflib--dump " " a alo ahi)))
                   (_ (error "Unknown tag %s" tag)))
              append g)))
 
-(cl-defmethod difflib--dump ((differ difflib-differ) tag x lo hi)
+(defun difflib--dump (tag x lo hi)
   (cl-loop for i in (number-sequence lo (1- hi))
            collect (format "%s %s" tag (elt x i))))
 
-(cl-defmethod difflib--plain-replace ((differ difflib-differ) a alo ahi b blo bhi)
+(defun difflib--plain-replace (a alo ahi b blo bhi)
   (cl-assert (and (< alo ahi) (< blo bhi)))
   (let ((first (if (< (- bhi blo) (- ahi alo))
-                   (difflib--dump differ "+" b blo bhi)
-                 (difflib--dump differ "-" a alo ahi)))
+                   (difflib--dump "+" b blo bhi)
+                 (difflib--dump "-" a alo ahi)))
         (second (if (< (- bhi blo) (- ahi alo))
-                    (difflib--dump differ "-" a alo ahi)
-                  (difflib--dump differ "+" b blo bhi))))
+                    (difflib--dump "-" a alo ahi)
+                  (difflib--dump "+" b blo bhi))))
     (append first second)))
 
 (cl-defmethod difflib--fancy-replace ((differ difflib-differ) a alo ahi b blo bhi)
@@ -608,7 +608,7 @@ on the similar pair. Lots of work, but often worth it."
       (if (< best-ratio cutoff)
           (progn
             (when (not eqi)
-              (setq result (append result (difflib--plain-replace differ a alo ahi b blo bhi)))
+              (setq result (append result (difflib--plain-replace a alo ahi b blo bhi)))
               (cl-return-from fn result))
             (setq best-i eqi
                   best-j eqj
@@ -638,7 +638,7 @@ on the similar pair. Lots of work, but often worth it."
                        (setq atags (concat atags (make-string la ?\s)))
                        (setq btags (concat btags (make-string lb ?\s))))
                       (_ (error "Unknown tag %s" tag))))
-                (setq result (append result (difflib--qformat differ aelt belt atags btags)))))
+                (setq result (append result (difflib--qformat aelt belt atags btags)))))
           (append result (list (concat "  " aelt)))))
       (setq result (append result (difflib--fancy-helper differ a (1+ best-i) ahi b (1+ best-j) bhi))))))
 
@@ -647,12 +647,12 @@ on the similar pair. Lots of work, but often worth it."
     (cond ((< alo ahi)
            (if (< blo bhi)
                (setq g (difflib--fancy-replace differ a alo ahi b blo bhi))
-             (setq g (difflib--dump differ "-" a alo ahi))))
+             (setq g (difflib--dump "-" a alo ahi))))
           ((< blo bhi)
-           (setq g (difflib--dump differ "+" b blo bhi))))
+           (setq g (difflib--dump "+" b blo bhi))))
     g))
 
-(cl-defmethod difflib--qformat ((differ difflib-differ) aline bline atags btags)
+(defun difflib--qformat (aline bline atags btags)
   "Fromat \"?\" output and deal with leading tabs."
   (let* (result
          (common (min (difflib--count-leading aline ?\t)

@@ -222,8 +222,7 @@
 
 (ert-deftest difflib-test-qformat-example ()
   (should
-   (equal (difflib--qformat (difflib-differ "differ")
-                            "\tabcDefghiJkl\n"
+   (equal (difflib--qformat "\tabcDefghiJkl\n"
                             "\tabcdefGhijkl\n"
                             "  ^ ^  ^      "
                             "  ^ ^  ^      ")
