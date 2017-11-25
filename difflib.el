@@ -558,10 +558,10 @@ name to a class constructor, but emacs<25 has no notion of
 (cl-defmethod difflib-compare ((differ difflib-differ) a b &optional &key newline-terminated)
   "Compare two sequences of lines; generate the resulting delta.
 
-If NEWLINE-TERMINATED is t, each sequence must contain individual
-single-line strings ending with newlines. The delta generated
-will then also consist of newline-terminated strings. This is
-consistent with the original python behavior."
+If each sequence contains strings ending with newlines, you
+should set NEWLINE-TERMINATED to t. The delta generated will then
+also consist of newline-terminated strings. This is consistent
+with the original python behavior."
   (unless newline-terminated
     (setq a (mapcar (lambda (str) (concat str "\n")) a))
     (setq b (mapcar (lambda (str) (concat str "\n")) b)))
@@ -890,10 +890,10 @@ The two optional keyword parameters are for filter functions:
 
 - charjunk: see `difflib-is-character-junk-p'.
 
-If NEWLINE-TERMINATED is t, each sequence must contain individual
-single-line strings ending with newlines. The delta generated
-will then also consist of newline-terminated strings. This is
-consistent with the original python behavior."
+If each sequence contains strings ending with newlines, you
+should set NEWLINE-TERMINATED to t. The delta generated will then
+also consist of newline-terminated strings. This is consistent
+with the original python behavior."
   (difflib-compare
    (difflib--make-differ :linejunk linejunk :charjunk charjunk)
    a

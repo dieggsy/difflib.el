@@ -412,14 +412,16 @@
 (ert-deftest difflib-test-restore-example ()
   (should
    (equal (difflib-restore (difflib-ndiff '("one\n" "two\n" "three\n")
-                                          '("ore\n" "tree\n" "emu\n"))
+                                          '("ore\n" "tree\n" "emu\n")
+                                          :newline-terminated t)
                            1)
           '("one\n"
             "two\n"
             "three\n")))
   (should
    (equal (difflib-restore (difflib-ndiff '("one\n" "two\n" "three\n")
-                                          '("ore\n" "tree\n" "emu\n"))
+                                          '("ore\n" "tree\n" "emu\n")
+                                          :newline-terminated t)
                            2)
           '("ore\n"
             "tree\n"

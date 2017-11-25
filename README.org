@@ -16,14 +16,49 @@ matches.
 (difflib-get-close-matches "apple" '("if" "while" "with" "except")) ;; => nil
 (difflib-get-close-matches "accept" '("if" "while" "with" "except")) ;; => '("except")
 #+end_src
+*** difflib-ndiff ~(a b &key linejunk (charjunk #'difflib-is-character-junk-p))~
+Return a delta: the difference between ~a~ and ~b~ (lists of strings).
+#+begin_src emacs-lisp
+(difflib-ndiff '("one" "two" "three")
+               '("ore" "tree" "emu"))
+;; =>
+;; '("- one"
+;;   "?  ^"
+;;   "+ ore"
+;;   "?  ^"
+;;   "- two"
+;;   "- three"
+;;   "?  -"
+;;   "+ tree"
+;;   "+ emu")
+#+end_src
+*** difflib-unified-diff ~(a b &key ...)~
+#+begin_src emacs-lisp
+(difflib-unified-diff (s-split " " "one two three four")
+                      (s-split " " "zero one tree four")
+                      :fromfile "Original"
+                      :tofile "Current"
+                      :fromfiledate "2005-01-26 23:30:50"
+                      :tofiledate "2010-04-02 10:20:52")
+
+;; =>
+;; '("--- Original\t2005-01-26 23:30:50"
+;;   "+++ Current\t2010-04-02 10:20:52"
+;;   "@@ -1,4 +1,4 @@"
+;;   "+zero"
+;;   " one"
+;;   "-two"
+;;   "-three"
+;;   "+tree"
+;;   " four")
+#+end_src
 *** difflib-context-diff ~(a b &key ...)~
 For two lists of strings, return a delta in context diff format.
 #+begin_src emacs-lisp
 (difflib-context-diff (s-split " " "one two three four")
                       (s-split " " "zero one tree four")
                       :fromfile "Original"
-                      :tofile "Current"
-                      :lineterm "")
+                      :tofile "Current")
 ;; =>
 ;; '("*** Original"
 ;;   "--- Current"
@@ -39,45 +74,17 @@ For two lists of strings, return a delta in context diff format.
 ;;   "! tree"
 ;;   "  four")
 #+end_src
-*** difflib-ndiff ~(a b &key linejunk (charjunk #'difflib-is-character-junk-p))~
-Return a delta: the difference between ~a~ and ~b~ (lists of strings).
-#+begin_src emacs-lisp
-(difflib-ndiff '("one\n" "two\n" "three\n")
-               '("ore\n" "tree\n" "emu\n"))
-;; =>
-;; '("- one\n"
-;;   "?  ^\n"
-;;   "+ ore\n"
-;;   "?  ^\n"
-;;   "- two\n"
-;;   "- three\n"
-;;   "?  -\n"
-;;   "+ tree\n"
-;;   "+ emu\n")
-#+end_src
-*** difflib-unified-diff ~(a b &key ...)~
-#+begin_src emacs-lisp
-(difflib-unified-diff (s-split " " "one two three four")
-                      (s-split " " "zero one tree four")
-                      :fromfile "Original"
-                      :tofile "Current"
-                      :fromfiledate "2005-01-26 23:30:50"
-                      :tofiledate "2010-04-02 10:20:52"
-                      :lineterm "")
-
-;; =>
-;; '("--- Original\t2005-01-26 23:30:50"
-;;   "+++ Current\t2010-04-02 10:20:52"
-;;   "@@ -1,4 +1,4 @@"
-;;   "+zero"
-;;   " one"
-;;   "-two"
-;;   "-three"
-;;   "+tree"
-;;   " four")
-#+end_src
 *** difflib-restore ~(delta which)~
 Return one of the two sequences that generated a ~difflib-ndiff~ delta.
+#+begin_src emacs-lisp
+(difflib-restore
+ (difflib-ndiff '("one" "two" "three") '("ore" "tree" "emu"))
+ 1) ;; => '("one" "two" "three")
+
+(difflib-restore
+ (difflib-ndiff '("one" "two" "three") '("ore" "tree" "emu"))
+ 2) ;; => '("ore" "tree" "emu")
+#+end_src
 ** Classes
 *** difflib-sequence-matcher
 A flexible class for comparing deltas of sequences of any type.
