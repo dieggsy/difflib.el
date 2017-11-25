@@ -659,7 +659,7 @@ on the similar pair. Lots of work, but often worth it."
                        (setq btags (concat btags (make-string lb ?\s))))
                       (_ (error "Unknown tag %s" tag))))
                 (setq result (append result (difflib--qformat aelt belt atags btags)))))
-          (append result (list (concat "  " aelt)))))
+          (setq result (append result (list (concat "  " aelt))))))
       (setq result (append result (difflib--fancy-helper differ a (1+ best-i) ahi b (1+ best-j) bhi))))))
 
 (cl-defmethod difflib--fancy-helper ((differ difflib-differ) a alo ahi b blo bhi)
