@@ -846,7 +846,7 @@ If not specified, the strings default to blanks."
                                    (not (stringp arg)))
                                  args)))
     (when not-str-arg
-      (error "All arguments must be str, not %s" (type-of arg)))))
+      (error "All arguments must be str, not %s" (type-of not-str-arg)))))
 
 ;;;###autoload
 (cl-defun difflib-ndiff (a b &key linejunk (charjunk #'difflib-is-character-junk-p))
