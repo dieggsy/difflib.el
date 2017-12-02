@@ -9,7 +9,7 @@
 (ert-deftest difflib-test-sequence-matcher-example ()
   ;; SequenceMatcher docstring
   (let ((s (difflib--make-matcher
-            :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
+            :isjunk (lambda (x) (equal x (if difflib-handle-chars-as-strings
                                              " "
                                            ?\s)))
             :a "private Thread currentThread;"
@@ -42,7 +42,7 @@
     (should (equal (difflib-find-longest-match s 0 5 0 9)
                    '(0 4 5))))
   (let ((s (difflib--make-matcher
-            :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
+            :isjunk (lambda (x) (equal x (if difflib-handle-chars-as-strings
                                              " "
                                            ?\s)))
             :a " abcd"
@@ -163,7 +163,7 @@
 
 (ert-deftest difflib-test-bjunk ()
   (let ((sm (difflib--make-matcher
-             :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
+             :isjunk (lambda (x) (equal x (if difflib-handle-chars-as-strings
                                               " "
                                             ?\s)))
              :a (concat (make-string 40 ?a)
@@ -172,7 +172,7 @@
                         (make-string 40 ?b)))))
     (should (equal (oref sm :bjunk) nil)))
   (let ((sm (difflib--make-matcher
-             :isjunk (lambda (x) (equal x (if difflib-pythonic-strings
+             :isjunk (lambda (x) (equal x (if difflib-handle-chars-as-strings
                                               " "
                                             ?\s)))
              :a (concat (make-string 40 ?a)
@@ -180,12 +180,12 @@
              :b (concat (make-string 44 ?a)
                         (make-string 40 ?b)
                         (make-string 20 ?\s)))))
-    (should (equal (oref sm :bjunk) (if difflib-pythonic-strings
+    (should (equal (oref sm :bjunk) (if difflib-handle-chars-as-strings
                                         '(" ")
                                       '(?\s)))))
   (let ((sm (difflib--make-matcher
              :isjunk (lambda (x) (member x
-                                         (if difflib-pythonic-strings
+                                         (if difflib-handle-chars-as-strings
                                              '(" " "b")
                                            '(?\s ?b))))
              :a (concat (make-string 40 ?a)
@@ -193,7 +193,7 @@
              :b (concat (make-string 44 ?a)
                         (make-string 40 ?b)
                         (make-string 20 ?\s)))))
-    (should (equal (oref sm :bjunk) (if difflib-pythonic-strings
+    (should (equal (oref sm :bjunk) (if difflib-handle-chars-as-strings
                                         '("b" " ")
                                       '(?b ?\s))))))
 
@@ -203,7 +203,7 @@
     (let ((sm (difflib--make-matcher :a seq1 :b seq2)))
       (should (cl-equalp (string-to-number (format "%.3f" (difflib-ratio sm)))
                          0))
-      (should (equal (oref sm :bpopular) (if difflib-pythonic-strings
+      (should (equal (oref sm :bpopular) (if difflib-handle-chars-as-strings
                                              '("b")
                                            '(?b)))))
     ;; Junk off

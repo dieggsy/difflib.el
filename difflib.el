@@ -5,7 +5,7 @@
 ;; URL: http://github.com/dieggsy/difflib.el
 ;; Git-Repository: git://github.com/dieggsy/difflib.el
 ;; Created: 2017-10-28
-;; Version: 0.3.5
+;; Version: 0.3.6
 ;; Keywords: matching tools string
 ;; Package-Requires: ((emacs "24.4") (cl-generic "0.3") (ht "2.2") (s "1.12.0"))
 
@@ -35,7 +35,7 @@
 (require 'ht)
 (require 's)
 
-(defvar difflib-pythonic-strings nil
+(defvar difflib-handle-chars-as-strings nil
   "Treat chars in strings as single-char-length strings.
 
 Can be useful for debugging.")
@@ -146,7 +146,7 @@ sequences, use .set_seq2(S) once and call .set_seq1(x) repeatedly for each of
 the other sequences.
 
 See also `difflib-set-seqs' and `difflib-set-seq2'."
-  (oset matcher :a (if (and difflib-pythonic-strings (stringp seq))
+  (oset matcher :a (if (and difflib-handle-chars-as-strings (stringp seq))
                        (split-string seq "" 'omit-nulls)
                      seq))
   (oset matcher :matching-blocks nil)
@@ -164,7 +164,7 @@ the other sequences.
 
 See also `difflib-set-seqs' and `difflib-set-seq1'.
 "
-  (oset matcher :b (if (and difflib-pythonic-strings (stringp seq))
+  (oset matcher :b (if (and difflib-handle-chars-as-strings (stringp seq))
                        (split-string seq "" 'omit-nulls)
                      seq))
   (oset matcher :matching-blocks nil)
