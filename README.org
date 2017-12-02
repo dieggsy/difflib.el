@@ -1,6 +1,6 @@
 * difflib.el
-[[http://melpa.milkbox.net/#/difflib][file:http://melpa.milkbox.net/packages/difflib.svg]]
-[[https://stable.melpa.org/#/difflib][file:https://stable.melpa.org/packages/difflib.svg]]
+[[https://melpa.org/#/difflib][file:https://melpa.org/packages/difflib-badge.svg]]
+[[https://stable.melpa.org/#/difflib][file:https://stable.melpa.org/packages/difflib-badge.svg]]
 [[https://travis-ci.org/dieggsy/difflib.el.svg?branch=master][file:https://travis-ci.org/dieggsy/difflib.el.svg?branch=master]]
 [[https://coveralls.io/github/dieggsy/difflib.el?branch=master][file:https://coveralls.io/repos/github/dieggsy/difflib.el/badge.svg?branch=master]]
 
