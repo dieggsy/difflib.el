@@ -1,4 +1,6 @@
 * difflib.el
+[[http://melpa.milkbox.net/#/difflib][file:http://melpa.milkbox.net/packages/difflib.svg]]
+[[https://stable.melpa.org/#/difflib][file:https://stable.melpa.org/packages/difflib.svg]]
 [[https://travis-ci.org/dieggsy/difflib.el.svg?branch=master][file:https://travis-ci.org/dieggsy/difflib.el.svg?branch=master]]
 [[https://coveralls.io/github/dieggsy/difflib.el?branch=master][file:https://coveralls.io/repos/github/dieggsy/difflib.el/badge.svg?branch=master]]
 
@@ -7,14 +9,21 @@ computing "human friendly" diffs, which use the notion of the longest
 contiguous and junk-free matching subsequence.
 
 ** Installation
-This package isn't on melpa yet. Consider installing with [[https://github.com/raxod502/straight.el][straight.el]] or
-[[https://github.com/quelpa/quelpa-use-package][quelpa-use-package]].
+This package is on melpa. If you have melpa in your package repositories, you
+can use ~M-x RET package-install RET difflib~ or install with [[https://github.com/jwiegley/use-package][use-package]]:
+#+begin_src emacs-lisp
+(use-package difflib
+  :ensure t)
+#+end_src
+
+Alternatively, consider installing with [[https://github.com/raxod502/straight.el][straight.el]] or [[https://github.com/quelpa/quelpa-use-package][quelpa-use-package]].
 
 Otherwise, download the files to somewhere in your load path, and require
 difflib:
 #+begin_src emacs-lisp
 (require 'difflib)
 #+end_src
+
 ** Functions
 *** difflib-get-close-matches ~(word possibilities (:n 3) (:cutoff 0.6))~
 Use ~difflib-sequence-matcher~ to return a list of the best "good enough"
