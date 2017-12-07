@@ -1,7 +1,7 @@
 * difflib.el
 [[https://melpa.org/#/difflib][file:https://melpa.org/packages/difflib-badge.svg]]
 [[https://stable.melpa.org/#/difflib][file:https://stable.melpa.org/packages/difflib-badge.svg]]
-[[https://travis-ci.org/dieggsy/difflib.el.svg?branch=master][file:https://travis-ci.org/dieggsy/difflib.el.svg?branch=master]]
+[[https://travis-ci.org/dieggsy/difflib.el][file:https://travis-ci.org/dieggsy/difflib.el.svg?branch=master]]
 [[https://coveralls.io/github/dieggsy/difflib.el?branch=master][file:https://coveralls.io/repos/github/dieggsy/difflib.el/badge.svg?branch=master]]
 
 This is a port of [[https://github.com/python/cpython/blob/c62f0cb3b1f6f9ca4ce463b1c99b0543bdfa38d6/Lib/difflib.py][python's difflib]] to emacs-lisp. It provides tools for
