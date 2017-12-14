@@ -1,4 +1,4 @@
-;;; test-helper.el --- Helpers for difflib.el-test.el
+;;; test-helper.el --- Helpers for difflib-test.el
 
 (let ((difflib-dir (f-parent (f-dirname (f-this-file)))))
   (add-to-list 'load-path difflib-dir))
