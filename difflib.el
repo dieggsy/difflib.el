@@ -738,10 +738,10 @@ lines of context. The number of context lines is set by N which
 defaults to three.
 
 By default, the diff control lines (those with ---, +++, or @@)
-are created with a trailing newline.
+are created without a trailing newline.
 
-For inputs that do not have trailing newlines, set LINETERM to ""
-so that the output will be uniformly newline free.
+For inputs that have trailing newlines, set LINETERM to \"\n\" so
+that the output will be uniformly newline-terminated.
 
 The unidiff format normally has a header for filenames and
 modification times. Any or all of these may be specified using
@@ -809,10 +809,10 @@ lines of context. The number of context lines is set by N which
 defaults to three.
 
 By default, the diff control lines (those with *** or ---) are
-created with a trailing newline.
+created without a trailing newline.
 
-For inputs that do not have trailing newlines, set LINETERM to ""
-so that the output will be uniformly newline free.
+For inputs that have trailing newlines, set LINETERM to \"\n\" so
+that the output will be uniformly newline-terminated.
 
 
 The context diff format normally has a header for filenames and
