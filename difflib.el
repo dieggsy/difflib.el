@@ -1,7 +1,7 @@
 ;;; difflib.el --- Helpers for computing deltas between sequences. -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2017 Diego A. Mundo
-;; Author: Diego A. Mundo <diegoamundo@gmail.com>
+;; Author: Diego A. Mundo <dieggsy@pm.me>
 ;; URL: http://github.com/dieggsy/difflib.el
 ;; Git-Repository: git://github.com/dieggsy/difflib.el
 ;; Created: 2017-10-28
